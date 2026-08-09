@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 
 type Modo = "login" | "registro" | "recuperar";
@@ -23,16 +22,16 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Iniciar sesión · Consagración 33 días" },
+      { title: "Iniciar sesiÃ³n Â· ConsagraciÃ³n 33 dÃ­as" },
       {
         name: "description",
         content:
-          "Accede a tu camino de consagración a los Santos Arcángeles y continúa desde cualquier dispositivo.",
+          "Accede a tu camino de consagraciÃ³n a los Santos ArcÃ¡ngeles y continÃºa desde cualquier dispositivo.",
       },
-      { property: "og:title", content: "Iniciar sesión · Consagración 33 días" },
+      { property: "og:title", content: "Iniciar sesiÃ³n Â· ConsagraciÃ³n 33 dÃ­as" },
       {
         property: "og:description",
-        content: "Tu camino quedará guardado para que puedas continuar.",
+        content: "Tu camino quedarÃ¡ guardado para que puedas continuar.",
       },
     ],
   }),
@@ -72,6 +71,14 @@ function AuthPage() {
   }, [session, navigate]);
 
   const setModo = (next: Modo) => void navigate({ to: "/auth", search: { modo: next } });
+  const authRedirectUrl = () => `${window.location.origin}/auth?modo=login`;
+
+  const goToLogin = () => {
+    setEmailSent(null);
+    setPassword("");
+    setConfirm("");
+    setModo("login");
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -79,7 +86,7 @@ function AuthPage() {
     try {
       if (modo === "recuperar") {
         const parsed = z.string().trim().email().max(255).safeParse(email);
-        if (!parsed.success) throw new Error("Introduce un correo electrónico válido.");
+        if (!parsed.success) throw new Error("Introduce un correo electrÃ³nico vÃ¡lido.");
         const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
           redirectTo: `${window.location.origin}/auth/reset-password`,
         });
@@ -91,20 +98,20 @@ function AuthPage() {
       if (modo === "registro") {
         const schema = z.object({
           fullName: z.string().trim().min(3, "Escribe tu nombre completo.").max(120),
-          email: z.string().trim().email("Correo electrónico no válido.").max(255),
-          password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres.").max(72),
+          email: z.string().trim().email("Correo electrÃ³nico no vÃ¡lido.").max(255),
+          password: z.string().min(8, "La contraseÃ±a debe tener al menos 8 caracteres.").max(72),
         });
         const parsed = schema.safeParse({ fullName, email, password });
         if (!parsed.success)
           throw new Error(parsed.error.issues[0]?.message ?? "Revisa los datos.");
-        if (password !== confirm) throw new Error("Las contraseñas no coinciden.");
-        if (!terms) throw new Error("Debes aceptar los términos y la política de privacidad.");
+        if (password !== confirm) throw new Error("Las contraseÃ±as no coinciden.");
+        if (!terms) throw new Error("Debes aceptar los tÃ©rminos y la polÃ­tica de privacidad.");
 
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: authRedirectUrl(),
             data: { full_name: parsed.data.fullName },
           },
         });
@@ -137,24 +144,46 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: authRedirectUrl() },
     });
-    if (result.error) {
+    if (error) {
       setBusy(false);
-      toast.error("No fue posible iniciar sesión con Google.");
+      toast.error(error.message || "No fue posible iniciar sesión con Google.");
+    }
+  };
+
+  const resendConfirmation = async () => {
+    const parsed = z.string().trim().email().safeParse(email);
+    if (!parsed.success) {
+      toast.error("Introduce nuevamente tu correo electrónico.");
+      setEmailSent(null);
+      setModo("registro");
       return;
     }
-    if (result.redirected) return;
-    void navigate({ to: "/dashboard", replace: true });
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: parsed.data,
+        options: { emailRedirectTo: authRedirectUrl() },
+      });
+      if (error) throw error;
+      toast.success("Correo de confirmación reenviado. Revisa también la carpeta de spam.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No fue posible reenviar el correo.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const title =
     modo === "registro"
       ? "Crear cuenta"
       : modo === "recuperar"
-        ? "Recuperar contraseña"
-        : "Iniciar sesión";
+        ? "Recuperar contraseÃ±a"
+        : "Iniciar sesiÃ³n";
 
   return (
     <div className="relative min-h-screen">
@@ -166,16 +195,16 @@ function AuthPage() {
       />
       <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-12 pt-10">
         <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
-          ← Volver
+          â† Volver
         </Link>
 
         <div className="mt-6 text-center">
           <h1 className="font-display text-2xl">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {modo === "registro"
-              ? "Únete al camino de consagración."
+              ? "Ãšnete al camino de consagraciÃ³n."
               : modo === "recuperar"
-                ? "Te enviaremos un enlace para restablecer tu contraseña."
+                ? "Te enviaremos un enlace para restablecer tu contraseÃ±a."
                 : "Bienvenido de nuevo."}
           </p>
         </div>
@@ -186,11 +215,26 @@ function AuthPage() {
             <p className="mt-3 font-display">Revisa tu correo</p>
             <p className="mt-2 text-sm text-muted-foreground">
               {emailSent === "confirm"
-                ? "Te enviamos un enlace para confirmar tu cuenta. Al confirmarla podrás comenzar tu camino."
-                : "Te enviamos un enlace para restablecer tu contraseña."}
+                ? "Te enviamos un enlace para confirmar tu cuenta. Al confirmarla podrÃ¡s comenzar tu camino."
+                : "Te enviamos un enlace para restablecer tu contraseÃ±a."}
             </p>
-            <Button variant="outline" className="mt-5 w-full" onClick={() => setModo("login")}>
-              Volver al inicio de sesión
+            {emailSent === "confirm" && (
+              <Button
+                variant="outline"
+                className="mt-5 w-full"
+                onClick={resendConfirmation}
+                disabled={busy}
+              >
+                {busy && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Reenviar correo de confirmación
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className={emailSent === "confirm" ? "mt-3 w-full" : "mt-5 w-full"}
+              onClick={goToLogin}
+            >
+              Volver al inicio de sesiÃ³n
             </Button>
           </div>
         ) : (
@@ -208,32 +252,32 @@ function AuthPage() {
               </Field>
             )}
 
-            <Field icon={<Mail className="size-4" />} label="Correo electrónico">
+            <Field icon={<Mail className="size-4" />} label="Correo electrÃ³nico">
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 maxLength={255}
                 autoComplete="email"
-                placeholder="Correo electrónico"
+                placeholder="Correo electrÃ³nico"
                 className="border-0 bg-transparent px-0 focus-visible:ring-0"
               />
             </Field>
 
             {modo !== "recuperar" && (
-              <Field icon={<Lock className="size-4" />} label="Contraseña">
+              <Field icon={<Lock className="size-4" />} label="ContraseÃ±a">
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   maxLength={72}
                   autoComplete={modo === "registro" ? "new-password" : "current-password"}
-                  placeholder="Contraseña"
+                  placeholder="ContraseÃ±a"
                   className="border-0 bg-transparent px-0 focus-visible:ring-0"
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-label={showPassword ? "Ocultar contraseÃ±a" : "Mostrar contraseÃ±a"}
                   onClick={() => setShowPassword((v) => !v)}
                   className="text-muted-foreground"
                 >
@@ -243,14 +287,14 @@ function AuthPage() {
             )}
 
             {modo === "registro" && (
-              <Field icon={<Lock className="size-4" />} label="Confirmar contraseña">
+              <Field icon={<Lock className="size-4" />} label="Confirmar contraseÃ±a">
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   maxLength={72}
                   autoComplete="new-password"
-                  placeholder="Confirmar contraseña"
+                  placeholder="Confirmar contraseÃ±a"
                   className="border-0 bg-transparent px-0 focus-visible:ring-0"
                 />
               </Field>
@@ -263,7 +307,7 @@ function AuthPage() {
                   Recordarme
                 </label>
                 <button type="button" className="text-primary" onClick={() => setModo("recuperar")}>
-                  ¿Olvidaste tu contraseña?
+                  Â¿Olvidaste tu contraseÃ±a?
                 </button>
               </div>
             )}
@@ -274,11 +318,11 @@ function AuthPage() {
                   className="mt-0.5"
                   checked={terms}
                   onCheckedChange={(v) => setTerms(Boolean(v))}
-                  aria-label="Acepto los términos y la política de privacidad"
+                  aria-label="Acepto los tÃ©rminos y la polÃ­tica de privacidad"
                 />
                 <span>
-                  Acepto los <span className="text-primary underline">Términos y Condiciones</span>{" "}
-                  y la <span className="text-primary underline">Política de Privacidad</span>.
+                  Acepto los <span className="text-primary underline">TÃ©rminos y Condiciones</span>{" "}
+                  y la <span className="text-primary underline">PolÃ­tica de Privacidad</span>.
                 </span>
               </label>
             )}
@@ -289,19 +333,19 @@ function AuthPage() {
                 ? "Crear mi cuenta"
                 : modo === "recuperar"
                   ? "Enviar enlace"
-                  : "Iniciar sesión"}
+                  : "Iniciar sesiÃ³n"}
             </Button>
 
             {modo === "registro" && (
               <p className="text-center text-xs text-muted-foreground">
-                Tu camino quedará guardado para que puedas continuar desde cualquier dispositivo.
+                Tu camino quedarÃ¡ guardado para que puedas continuar desde cualquier dispositivo.
               </p>
             )}
 
             {modo !== "recuperar" && (
               <>
                 <div className="my-3 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="h-px flex-1 bg-border" />o continúa con
+                  <span className="h-px flex-1 bg-border" />o continÃºa con
                   <span className="h-px flex-1 bg-border" />
                 </div>
                 <Button
@@ -323,16 +367,16 @@ function AuthPage() {
           <p className="mt-8 text-center text-sm text-muted-foreground">
             {modo === "registro" ? (
               <>
-                ¿Ya tienes cuenta?{" "}
+                Â¿Ya tienes cuenta?{" "}
                 <button className="text-primary" onClick={() => setModo("login")}>
-                  Iniciar sesión
+                  Iniciar sesiÃ³n
                 </button>
               </>
             ) : (
               <>
-                ¿No tienes cuenta?{" "}
+                Â¿No tienes cuenta?{" "}
                 <button className="text-primary" onClick={() => setModo("registro")}>
-                  Regístrate
+                  RegÃ­strate
                 </button>
               </>
             )}
