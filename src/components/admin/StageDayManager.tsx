@@ -222,7 +222,14 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                     ? item.day_number
                     : ""}
               </b>
-              <span className="min-w-0 flex-1 truncate text-sm">{item.title}</span>
+              <span className="min-w-0 flex-1 text-sm">
+                <span className="block truncate font-medium">{item.title}</span>
+                {selected === item.id && mode === "stages" && "description" in item && (
+                  <span className="mt-1.5 block whitespace-pre-wrap text-xs leading-relaxed text-white/65">
+                    {item.description?.trim() || "Sin descripción registrada."}
+                  </span>
+                )}
+              </span>
               <Pencil className="size-4" />
             </button>
           ))}
