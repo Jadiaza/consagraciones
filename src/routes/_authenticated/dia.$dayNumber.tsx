@@ -1,0 +1,287 @@
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Minus, Plus, Sun, Moon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { AppShell } from "@/components/app/AppShell";
+import { AudioPlayer } from "@/components/app/AudioPlayer";
+import { MeditationCard } from "@/components/app/MeditationTimer";
+import {
+  DoctrineCard,
+  ErrorState,
+  LoadingState,
+  PrayerCard,
+  ScriptureCard,
+  SectionTitle,
+} from "@/components/app/cards";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { dayQuery, myConsecrationQuery, myProgressQuery } from "@/lib/consecration";
+import { MediaService } from "@/lib/media-service";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_authenticated/dia/$dayNumber")({ component: DiaPage });
+
+function DiaPage() {
+  const { dayNumber } = Route.useParams();
+  const n = Number(dayNumber);
+  const { user } = useAuth();
+  const { data: mine } = useQuery(myConsecrationQuery(user?.id));
+  const { data, isLoading, error } = useQuery(dayQuery(n, mine?.consecration_id));
+  const { data: progress, refetch } = useQuery(myProgressQuery(mine?.id));
+
+  const [scale, setScale] = useState(1);
+  const [light, setLight] = useState(false);
+  const [journal, setJournal] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const record = (progress ?? []).find((p) => p.day_number === n);
+
+  const upsert = async (patch: Record<string, unknown>) => {
+    if (!user || !mine) return;
+    const { error: err } = await supabase
+      .from("user_day_progress")
+      .upsert(
+        { user_id: user.id, user_consecration_id: mine.id, day_number: n, ...patch },
+        { onConflict: "user_consecration_id,day_number" },
+      );
+    if (err) toast.error("No fue posible guardar.");
+    else void refetch();
+  };
+
+  const saveJournal = async () => {
+    if (!user || !journal.trim()) return;
+    setSaving(true);
+    const { error: err } = await supabase.from("user_journal_entries").insert({
+      user_id: user.id,
+      user_consecration_id: mine?.id ?? null,
+      day_number: n,
+      content: journal.trim().slice(0, 5000),
+    });
+    setSaving(false);
+    if (err) toast.error("No fue posible guardar tu diario.");
+    else {
+      setJournal("");
+      toast.success("Guardado en tu diario privado.");
+    }
+  };
+
+  if (isLoading)
+    return (
+      <AppShell title={`Día ${n}`}>
+        <LoadingState />
+      </AppShell>
+    );
+  if (error)
+    return (
+      <AppShell title={`Día ${n}`}>
+        <ErrorState message={(error as Error).message} />
+      </AppShell>
+    );
+  if (!data)
+    return (
+      <AppShell title={`Día ${n}`}>
+        <ErrorState message="Este día aún no está publicado." />
+      </AppShell>
+    );
+
+  const { day, scripture, doctrine, questions, media } = data;
+  const podcast = media.find((m) => m.asset_type === "podcast");
+
+  return (
+    <AppShell
+      title={`Día ${n} de 33`}
+      back
+      className={cn(light && "reading-light")}
+      action={
+        <div className="flex items-center gap-1">
+          <button
+            aria-label="Reducir letra"
+            onClick={() => setScale((s) => Math.max(0.85, s - 0.1))}
+          >
+            <Minus className="size-4" />
+          </button>
+          <button
+            aria-label="Aumentar letra"
+            onClick={() => setScale((s) => Math.min(1.4, s + 0.1))}
+          >
+            <Plus className="size-4" />
+          </button>
+          <button aria-label="Cambiar modo de lectura" onClick={() => setLight((v) => !v)}>
+            {light ? <Moon className="size-4" /> : <Sun className="size-4" />}
+          </button>
+        </div>
+      }
+    >
+      <div
+        className={cn("rounded-2xl p-1", light && "reading-light bg-background text-foreground")}
+        style={{ fontSize: `${scale}rem` }}
+      >
+        <h1 className="font-display text-2xl">{day.title}</h1>
+        {day.subtitle && <p className="mt-1 text-sm text-muted-foreground">{day.subtitle}</p>}
+        {day.motto && <p className="mt-2 font-display text-primary">«{day.motto}»</p>}
+
+        {day.introduction && (
+          <>
+            <SectionTitle hint="Ponte en la presencia de Dios">1 · Preparación</SectionTitle>
+            <p className="leading-relaxed">{day.introduction}</p>
+          </>
+        )}
+
+        {scripture.length > 0 && (
+          <>
+            <SectionTitle>2 · Palabra de Dios</SectionTitle>
+            <div className="flex flex-col gap-3">
+              {scripture.map((s) => (
+                <ScriptureCard
+                  key={s.id}
+                  citation={s.citation}
+                  passage={s.passage}
+                  commentary={s.commentary}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        <SectionTitle>3 · Escuchar el podcast</SectionTitle>
+        <AudioPlayer
+          src={MediaService.url(podcast ?? null)}
+          title={`Día ${n} · ${day.title}`}
+          subtitle={`${day.estimated_minutes} min aprox.`}
+          initialPosition={record?.audio_position_seconds ?? 0}
+          onPosition={(seconds) => {
+            if (seconds % 15 === 0) void upsert({ audio_position_seconds: seconds });
+          }}
+        />
+
+        {day.teaching && (
+          <>
+            <SectionTitle>4 · Enseñanza</SectionTitle>
+            <p className="whitespace-pre-line leading-relaxed">{day.teaching}</p>
+          </>
+        )}
+
+        {(day.church_teaching || doctrine.length > 0) && (
+          <>
+            <SectionTitle>5 · La Iglesia nos enseña</SectionTitle>
+            {day.church_teaching && <p className="mb-3 leading-relaxed">{day.church_teaching}</p>}
+            <div className="flex flex-col gap-3">
+              {doctrine.map((d) => (
+                <DoctrineCard
+                  key={d.id}
+                  referenceType={d.reference_type}
+                  author={d.author}
+                  work={d.work}
+                  reference={d.reference}
+                  excerpt={d.excerpt}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        <SectionTitle>6 · Meditación</SectionTitle>
+        <MeditationCard text={day.meditation} />
+
+        {questions.length > 0 && (
+          <>
+            <SectionTitle hint="Responde con calma, en silencio">
+              7 · Examen espiritual
+            </SectionTitle>
+            <ol className="flex flex-col gap-2">
+              {questions.map((q) => (
+                <li key={q.id} className="surface-sacred rounded-xl p-4 leading-relaxed">
+                  {q.question}
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
+
+        {day.purpose && (
+          <>
+            <SectionTitle>8 · Propósito del día</SectionTitle>
+            <div className="surface-sacred rounded-2xl p-4">
+              <p className="leading-relaxed">{day.purpose}</p>
+              <Button
+                className="mt-4 w-full"
+                variant={record?.purpose_accepted ? "outline" : "default"}
+                onClick={() => void upsert({ purpose_accepted: true })}
+              >
+                {record?.purpose_accepted ? "Propósito asumido" : "Asumir este propósito"}
+              </Button>
+              {record?.purpose_accepted && (
+                <div className="mt-3">
+                  <p className="text-sm text-muted-foreground">¿Pudiste vivirlo?</p>
+                  <div className="mt-2 flex gap-2">
+                    {["Sí", "En parte", "Hoy me costó"].map((option) => (
+                      <Button
+                        key={option}
+                        size="sm"
+                        variant={record?.purpose_outcome === option ? "default" : "outline"}
+                        onClick={() => void upsert({ purpose_outcome: option })}
+                      >
+                        {option}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {day.prayer && (
+          <>
+            <SectionTitle>9 · Oración</SectionTitle>
+            <PrayerCard body={day.prayer} />
+          </>
+        )}
+
+        <SectionTitle>10 · Coronilla de San Miguel</SectionTitle>
+        <Button asChild variant="outline" className="w-full">
+          <Link to="/coronilla">Rezar la Coronilla</Link>
+        </Button>
+
+        {day.progressive_consecration && (
+          <>
+            <SectionTitle>11 · Consagración progresiva</SectionTitle>
+            <PrayerCard body={day.progressive_consecration} />
+          </>
+        )}
+
+        <SectionTitle hint="Estrictamente privado">12 · Diario espiritual</SectionTitle>
+        <div className="surface-sacred rounded-2xl p-4">
+          <p className="text-sm text-muted-foreground">
+            ¿Qué me habló Dios hoy? ¿Qué debo cambiar? ¿Qué gracia quiero pedir? ¿Por quién quiero
+            orar?
+          </p>
+          <Textarea
+            className="mt-3 min-h-32"
+            maxLength={5000}
+            value={journal}
+            onChange={(e) => setJournal(e.target.value)}
+          />
+          <Button className="mt-3 w-full" variant="outline" disabled={saving} onClick={saveJournal}>
+            Guardar en mi diario
+          </Button>
+        </div>
+
+        <Button
+          className="mt-8 h-13 w-full text-base"
+          size="lg"
+          onClick={() => {
+            void upsert({ completed: true, completed_at: new Date().toISOString() });
+            toast.success("Día completado. Tu camino continúa.");
+          }}
+        >
+          {record?.completed ? "Día completado" : "He completado este día"}
+        </Button>
+      </div>
+    </AppShell>
+  );
+}
