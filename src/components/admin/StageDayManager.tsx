@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
+import { DayRelatedContentManager } from "@/components/admin/DayRelatedContentManager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -251,7 +252,17 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
           {mode === "stages" ? (
             <StageForm form={stageForm} set={setStageForm} />
           ) : (
-            <DayForm form={dayForm} set={setDayForm} stages={stages.data ?? []} />
+            <>
+              <DayForm form={dayForm} set={setDayForm} stages={stages.data ?? []} />
+              {selected ? (
+                <DayRelatedContentManager dayId={selected} consecrationId={consecrationId} />
+              ) : (
+                <div className="rounded-xl border border-dashed border-white/15 p-4 text-sm text-white/55">
+                  Guarda primero el día para agregar lecturas, referencias, preguntas, secciones y
+                  multimedia.
+                </div>
+              )}
+            </>
           )}
           <div className="flex justify-between pt-2">
             {selected ? (

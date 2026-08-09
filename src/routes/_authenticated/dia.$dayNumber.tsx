@@ -88,7 +88,7 @@ function DiaPage() {
       </AppShell>
     );
 
-  const { day, scripture, doctrine, questions, media } = data;
+  const { day, sections, scripture, doctrine, questions, media } = data;
   const podcast = media.find((m) => m.asset_type === "podcast");
 
   return (
@@ -164,6 +164,13 @@ function DiaPage() {
             <p className="whitespace-pre-line leading-relaxed">{day.teaching}</p>
           </>
         )}
+
+        {sections.map((section) => (
+          <section key={section.id}>
+            <SectionTitle>{section.title || "Contenido complementario"}</SectionTitle>
+            {section.body && <p className="whitespace-pre-line leading-relaxed">{section.body}</p>}
+          </section>
+        ))}
 
         {(day.church_teaching || doctrine.length > 0) && (
           <>
