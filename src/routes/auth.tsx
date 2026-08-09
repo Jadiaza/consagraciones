@@ -22,16 +22,16 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Iniciar sesiÃ³n Â· ConsagraciÃ³n 33 dÃ­as" },
+      { title: "Iniciar sesión · Consagración 33 días" },
       {
         name: "description",
         content:
-          "Accede a tu camino de consagraciÃ³n a los Santos ArcÃ¡ngeles y continÃºa desde cualquier dispositivo.",
+          "Accede a tu camino de consagración a los Santos Arcángeles y continúa desde cualquier dispositivo.",
       },
-      { property: "og:title", content: "Iniciar sesiÃ³n Â· ConsagraciÃ³n 33 dÃ­as" },
+      { property: "og:title", content: "Iniciar sesión · Consagración 33 días" },
       {
         property: "og:description",
-        content: "Tu camino quedarÃ¡ guardado para que puedas continuar.",
+        content: "Tu camino quedará guardado para que puedas continuar.",
       },
     ],
   }),
@@ -86,7 +86,7 @@ function AuthPage() {
     try {
       if (modo === "recuperar") {
         const parsed = z.string().trim().email().max(255).safeParse(email);
-        if (!parsed.success) throw new Error("Introduce un correo electrÃ³nico vÃ¡lido.");
+        if (!parsed.success) throw new Error("Introduce un correo electrónico válido.");
         const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
           redirectTo: `${window.location.origin}/auth/reset-password`,
         });
@@ -98,14 +98,14 @@ function AuthPage() {
       if (modo === "registro") {
         const schema = z.object({
           fullName: z.string().trim().min(3, "Escribe tu nombre completo.").max(120),
-          email: z.string().trim().email("Correo electrÃ³nico no vÃ¡lido.").max(255),
-          password: z.string().min(8, "La contraseÃ±a debe tener al menos 8 caracteres.").max(72),
+          email: z.string().trim().email("Correo electrónico no válido.").max(255),
+          password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres.").max(72),
         });
         const parsed = schema.safeParse({ fullName, email, password });
         if (!parsed.success)
           throw new Error(parsed.error.issues[0]?.message ?? "Revisa los datos.");
-        if (password !== confirm) throw new Error("Las contraseÃ±as no coinciden.");
-        if (!terms) throw new Error("Debes aceptar los tÃ©rminos y la polÃ­tica de privacidad.");
+        if (password !== confirm) throw new Error("Las contraseñas no coinciden.");
+        if (!terms) throw new Error("Debes aceptar los términos y la política de privacidad.");
 
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
@@ -182,8 +182,8 @@ function AuthPage() {
     modo === "registro"
       ? "Crear cuenta"
       : modo === "recuperar"
-        ? "Recuperar contraseÃ±a"
-        : "Iniciar sesiÃ³n";
+        ? "Recuperar contraseña"
+        : "Iniciar sesión";
 
   return (
     <div className="relative min-h-screen">
@@ -195,16 +195,16 @@ function AuthPage() {
       />
       <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-12 pt-10">
         <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
-          â† Volver
+          ← Volver
         </Link>
 
         <div className="mt-6 text-center">
           <h1 className="font-display text-2xl">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {modo === "registro"
-              ? "Ãšnete al camino de consagraciÃ³n."
+              ? "Únete al camino de consagración."
               : modo === "recuperar"
-                ? "Te enviaremos un enlace para restablecer tu contraseÃ±a."
+                ? "Te enviaremos un enlace para restablecer tu contraseña."
                 : "Bienvenido de nuevo."}
           </p>
         </div>
@@ -215,8 +215,8 @@ function AuthPage() {
             <p className="mt-3 font-display">Revisa tu correo</p>
             <p className="mt-2 text-sm text-muted-foreground">
               {emailSent === "confirm"
-                ? "Te enviamos un enlace para confirmar tu cuenta. Al confirmarla podrÃ¡s comenzar tu camino."
-                : "Te enviamos un enlace para restablecer tu contraseÃ±a."}
+                ? "Te enviamos un enlace para confirmar tu cuenta. Al confirmarla podrás comenzar tu camino."
+                : "Te enviamos un enlace para restablecer tu contraseña."}
             </p>
             {emailSent === "confirm" && (
               <Button
@@ -234,7 +234,7 @@ function AuthPage() {
               className={emailSent === "confirm" ? "mt-3 w-full" : "mt-5 w-full"}
               onClick={goToLogin}
             >
-              Volver al inicio de sesiÃ³n
+              Volver al inicio de sesión
             </Button>
           </div>
         ) : (
@@ -252,32 +252,32 @@ function AuthPage() {
               </Field>
             )}
 
-            <Field icon={<Mail className="size-4" />} label="Correo electrÃ³nico">
+            <Field icon={<Mail className="size-4" />} label="Correo electrónico">
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 maxLength={255}
                 autoComplete="email"
-                placeholder="Correo electrÃ³nico"
+                placeholder="Correo electrónico"
                 className="border-0 bg-transparent px-0 focus-visible:ring-0"
               />
             </Field>
 
             {modo !== "recuperar" && (
-              <Field icon={<Lock className="size-4" />} label="ContraseÃ±a">
+              <Field icon={<Lock className="size-4" />} label="Contraseña">
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   maxLength={72}
                   autoComplete={modo === "registro" ? "new-password" : "current-password"}
-                  placeholder="ContraseÃ±a"
+                  placeholder="Contraseña"
                   className="border-0 bg-transparent px-0 focus-visible:ring-0"
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? "Ocultar contraseÃ±a" : "Mostrar contraseÃ±a"}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   onClick={() => setShowPassword((v) => !v)}
                   className="text-muted-foreground"
                 >
@@ -287,14 +287,14 @@ function AuthPage() {
             )}
 
             {modo === "registro" && (
-              <Field icon={<Lock className="size-4" />} label="Confirmar contraseÃ±a">
+              <Field icon={<Lock className="size-4" />} label="Confirmar contraseña">
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   maxLength={72}
                   autoComplete="new-password"
-                  placeholder="Confirmar contraseÃ±a"
+                  placeholder="Confirmar contraseña"
                   className="border-0 bg-transparent px-0 focus-visible:ring-0"
                 />
               </Field>
@@ -307,7 +307,7 @@ function AuthPage() {
                   Recordarme
                 </label>
                 <button type="button" className="text-primary" onClick={() => setModo("recuperar")}>
-                  Â¿Olvidaste tu contraseÃ±a?
+                  ¿Olvidaste tu contraseña?
                 </button>
               </div>
             )}
@@ -318,11 +318,11 @@ function AuthPage() {
                   className="mt-0.5"
                   checked={terms}
                   onCheckedChange={(v) => setTerms(Boolean(v))}
-                  aria-label="Acepto los tÃ©rminos y la polÃ­tica de privacidad"
+                  aria-label="Acepto los términos y la política de privacidad"
                 />
                 <span>
-                  Acepto los <span className="text-primary underline">TÃ©rminos y Condiciones</span>{" "}
-                  y la <span className="text-primary underline">PolÃ­tica de Privacidad</span>.
+                  Acepto los <span className="text-primary underline">Términos y Condiciones</span>{" "}
+                  y la <span className="text-primary underline">Política de Privacidad</span>.
                 </span>
               </label>
             )}
@@ -333,19 +333,19 @@ function AuthPage() {
                 ? "Crear mi cuenta"
                 : modo === "recuperar"
                   ? "Enviar enlace"
-                  : "Iniciar sesiÃ³n"}
+                  : "Iniciar sesión"}
             </Button>
 
             {modo === "registro" && (
               <p className="text-center text-xs text-muted-foreground">
-                Tu camino quedarÃ¡ guardado para que puedas continuar desde cualquier dispositivo.
+                Tu camino quedará guardado para que puedas continuar desde cualquier dispositivo.
               </p>
             )}
 
             {modo !== "recuperar" && (
               <>
                 <div className="my-3 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="h-px flex-1 bg-border" />o continÃºa con
+                  <span className="h-px flex-1 bg-border" />o continúa con
                   <span className="h-px flex-1 bg-border" />
                 </div>
                 <Button
@@ -367,16 +367,16 @@ function AuthPage() {
           <p className="mt-8 text-center text-sm text-muted-foreground">
             {modo === "registro" ? (
               <>
-                Â¿Ya tienes cuenta?{" "}
+                ¿Ya tienes cuenta?{" "}
                 <button className="text-primary" onClick={() => setModo("login")}>
-                  Iniciar sesiÃ³n
+                  Iniciar sesión
                 </button>
               </>
             ) : (
               <>
-                Â¿No tienes cuenta?{" "}
+                ¿No tienes cuenta?{" "}
                 <button className="text-primary" onClick={() => setModo("registro")}>
-                  RegÃ­strate
+                  Regístrate
                 </button>
               </>
             )}
