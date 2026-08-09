@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addDays,
@@ -41,7 +40,7 @@ export const Route = createFileRoute("/_authenticated/onboarding")({ component: 
 
 function Onboarding() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: available } = useQuery(publishedConsecrationsQuery());
   const [selectedConsecrationId, setSelectedConsecrationId] = useState("");
   const { data: stages } = useQuery(stagesQuery(selectedConsecrationId || undefined));
@@ -60,18 +59,41 @@ function Onboarding() {
   const end = formatLongDate(addDays(new Date(`${startDate}T00:00:00`), durationDays - 1));
 
   const finish = async () => {
-    if (!user) return;
     setBusy(true);
     try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        throw new Error("Tu sesión expiró. Inicia sesión nuevamente para comenzar el camino.");
+      }
+
       const consecration = await fetchConsecration(selectedConsecrationId || undefined);
-      if (!consecration) throw new Error("La consagración no está disponible.");
+      if (!consecration) throw new Error("La consagración no está disponible o no está publicada.");
+
+      const { data: existing, error: existingError } = await supabase
+        .from("user_consecrations")
+        .select("*")
+        .eq("user_id", authData.user.id)
+        .eq("consecration_id", consecration.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (existingError) throw existingError;
+
+      if (existing) {
+        await queryClient.invalidateQueries({ queryKey: ["my-consecration", authData.user.id] });
+        toast.info("Ya tienes este camino activo. Continuaremos desde tu avance actual.");
+        void navigate({ to: "/dashboard", replace: true });
+        return;
+      }
+
       const expected = addDays(new Date(`${startDate}T00:00:00`), durationDays - 1)
         .toISOString()
         .slice(0, 10);
       const { data, error } = await supabase
         .from("user_consecrations")
         .insert({
-          user_id: user.id,
+          user_id: authData.user.id,
           consecration_id: consecration.id,
           start_date: startDate,
           expected_end_date: expected,
@@ -79,16 +101,26 @@ function Onboarding() {
         .select()
         .single();
       if (error) throw error;
+
       if (intention.trim()) {
-        await supabase.from("user_intentions").insert({
-          user_id: user.id,
+        const { error: intentionError } = await supabase.from("user_intentions").insert({
+          user_id: authData.user.id,
           user_consecration_id: data.id,
           content: intention.trim().slice(0, 2000),
         });
+        if (intentionError) {
+          toast.warning("El camino comenzó, pero no fue posible guardar la intención.");
+        }
       }
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["my-consecration", authData.user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["my-progress"] }),
+      ]);
       void navigate({ to: "/dashboard", replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No fue posible comenzar el camino.");
+      console.error("No fue posible comenzar el camino", error);
+      toast.error(getErrorMessage(error));
     } finally {
       setBusy(false);
     }
