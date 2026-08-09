@@ -16,6 +16,7 @@ import { Route as RecursosRouteImport } from './routes/recursos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCoronillaRouteImport } from './routes/_authenticated/coronilla'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDiaRouteImport } from './routes/_authenticated/dia'
 import { Route as AuthenticatedDiasRouteImport } from './routes/_authenticated/dias'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
@@ -56,6 +57,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDiaRoute = AuthenticatedDiaRouteImport.update({
+  id: '/dia',
+  path: '/dia',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDiasRoute = AuthenticatedDiasRouteImport.update({
   id: '/dias',
   path: '/dias',
@@ -78,9 +84,9 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
 } as any)
 const AuthenticatedDiaDayNumberRoute =
   AuthenticatedDiaDayNumberRouteImport.update({
-    id: '/dia/$dayNumber',
-    path: '/dia/$dayNumber',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/$dayNumber',
+    path: '/$dayNumber',
+    getParentRoute: () => AuthenticatedDiaRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/coronilla': typeof AuthenticatedCoronillaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dia': typeof AuthenticatedDiaRouteWithChildren
   '/dias': typeof AuthenticatedDiasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/coronilla': typeof AuthenticatedCoronillaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dia': typeof AuthenticatedDiaRouteWithChildren
   '/dias': typeof AuthenticatedDiasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/coronilla': typeof AuthenticatedCoronillaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/dia': typeof AuthenticatedDiaRouteWithChildren
   '/_authenticated/dias': typeof AuthenticatedDiasRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/coronilla'
     | '/dashboard'
+    | '/dia'
     | '/dias'
     | '/onboarding'
     | '/perfil'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/coronilla'
     | '/dashboard'
+    | '/dia'
     | '/dias'
     | '/onboarding'
     | '/perfil'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/coronilla'
     | '/_authenticated/dashboard'
+    | '/_authenticated/dia'
     | '/_authenticated/dias'
     | '/_authenticated/onboarding'
     | '/_authenticated/perfil'
@@ -225,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dia': {
+      id: '/_authenticated/dia'
+      path: '/dia'
+      fullPath: '/dia'
+      preLoaderRoute: typeof AuthenticatedDiaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dias': {
       id: '/_authenticated/dias'
       path: '/dias'
@@ -255,32 +274,43 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/dia/$dayNumber': {
       id: '/_authenticated/dia/$dayNumber'
-      path: '/dia/$dayNumber'
+      path: '/$dayNumber'
       fullPath: '/dia/$dayNumber'
       preLoaderRoute: typeof AuthenticatedDiaDayNumberRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedDiaRoute
     }
   }
 }
+
+interface AuthenticatedDiaRouteChildren {
+  AuthenticatedDiaDayNumberRoute: typeof AuthenticatedDiaDayNumberRoute
+}
+
+const AuthenticatedDiaRouteChildren: AuthenticatedDiaRouteChildren = {
+  AuthenticatedDiaDayNumberRoute: AuthenticatedDiaDayNumberRoute,
+}
+
+const AuthenticatedDiaRouteWithChildren =
+  AuthenticatedDiaRoute._addFileChildren(AuthenticatedDiaRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCoronillaRoute: typeof AuthenticatedCoronillaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDiaRoute: typeof AuthenticatedDiaRouteWithChildren
   AuthenticatedDiasRoute: typeof AuthenticatedDiasRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
-  AuthenticatedDiaDayNumberRoute: typeof AuthenticatedDiaDayNumberRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCoronillaRoute: AuthenticatedCoronillaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDiaRoute: AuthenticatedDiaRouteWithChildren,
   AuthenticatedDiasRoute: AuthenticatedDiasRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
-  AuthenticatedDiaDayNumberRoute: AuthenticatedDiaDayNumberRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
