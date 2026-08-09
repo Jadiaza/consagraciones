@@ -68,15 +68,8 @@ export function DayCard({
   completed: boolean;
   available: boolean;
 }) {
-  return (
-    <Link
-      to="/dia/$dayNumber"
-      params={{ dayNumber: String(dayNumber) }}
-      className={cn(
-        "surface-sacred flex items-center gap-3 rounded-xl p-3 transition-colors hover:border-primary/50",
-        !available && "opacity-60",
-      )}
-    >
+  const content = (
+    <>
       <span
         className={cn(
           "flex size-9 shrink-0 items-center justify-center rounded-full border text-sm font-medium",
@@ -86,7 +79,32 @@ export function DayCard({
         {dayNumber}
       </span>
       <span className="min-w-0 flex-1 truncate text-sm">{title}</span>
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+      {available ? (
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+      ) : (
+        <Lock className="size-4 shrink-0 text-muted-foreground" aria-label="Día bloqueado" />
+      )}
+    </>
+  );
+
+  if (!available) {
+    return (
+      <div
+        aria-disabled="true"
+        className="surface-sacred flex cursor-not-allowed items-center gap-3 rounded-xl p-3 opacity-60"
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      to="/dia/$dayNumber"
+      params={{ dayNumber: String(dayNumber) }}
+      className="surface-sacred flex items-center gap-3 rounded-xl p-3 transition-colors hover:border-primary/50"
+    >
+      {content}
     </Link>
   );
 }

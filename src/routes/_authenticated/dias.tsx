@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app/AppShell";
 import { DayCard, LoadingState, StageCard } from "@/components/app/cards";
 import { useAuth } from "@/hooks/useAuth";
-import { daysQuery, myConsecrationQuery, myProgressQuery, stagesQuery } from "@/lib/consecration";
+import { daysQuery, myConsecrationQuery, myProgressQuery, nextAvailableDay, stagesQuery } from "@/lib/consecration";
 
 export const Route = createFileRoute("/_authenticated/dias")({ component: Dias });
 
@@ -16,6 +16,7 @@ function Dias() {
   const { data: progress } = useQuery(myProgressQuery(mine?.id));
 
   const completed = new Set((progress ?? []).filter((p) => p.completed).map((p) => p.day_number));
+  const availableThrough = nextAvailableDay(progress);
 
   return (
     <AppShell title="Los 33 días">
@@ -36,6 +37,7 @@ function Dias() {
                 (days ?? []).filter((d) => d.stage_id === stage.id && completed.has(d.day_number))
                   .length
               }
+              locked={stage.start_day > availableThrough}
             />
             <div className="mt-2 flex flex-col gap-2">
               {(days ?? [])
@@ -46,7 +48,7 @@ function Dias() {
                     dayNumber={day.day_number}
                     title={day.title}
                     completed={completed.has(day.day_number)}
-                    available
+                    available={day.day_number <= availableThrough}
                   />
                 ))}
             </div>

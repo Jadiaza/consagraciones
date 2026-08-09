@@ -106,6 +106,17 @@ export const myProgressQuery = (id: string | undefined) => queryOptions({
   queryFn: async () => { const { data, error } = await supabase.from("user_day_progress").select("*").eq("user_consecration_id", id!).order("day_number"); if (error) throw error; return data ?? []; },
 });
 
+export function nextAvailableDay(
+  progress: Array<{ day_number: number; completed: boolean }> | null | undefined,
+) {
+  const completed = new Set(
+    (progress ?? []).filter((row) => row.completed).map((row) => row.day_number),
+  );
+  for (let day = 1; day <= 33; day += 1) {
+    if (!completed.has(day)) return day;
+  }
+  return 33;
+}
 export const RESOURCE_CATEGORIES = [
   { key:"oraciones",label:"Oraciones"},{key:"biblia",label:"Biblia"},{key:"san-miguel",label:"San Miguel"},{key:"san-gabriel",label:"San Gabriel"},{key:"san-rafael",label:"San Rafael"},{key:"catequesis",label:"Catequesis"},{key:"combate-espiritual",label:"Combate espiritual"},{key:"vida-sacramental",label:"Vida sacramental"},{key:"maria",label:"María, Reina de los Ángeles"},{key:"eucaristia",label:"Eucaristía"},{key:"formacion",label:"Formación"},
 ];

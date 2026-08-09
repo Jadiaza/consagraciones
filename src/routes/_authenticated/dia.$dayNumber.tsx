@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { dayQuery, myConsecrationQuery, myProgressQuery } from "@/lib/consecration";
+import { dayQuery, myConsecrationQuery, myProgressQuery, nextAvailableDay } from "@/lib/consecration";
 import { MediaService } from "@/lib/media-service";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ function DiaPage() {
   const { user } = useAuth();
   const { data: mine } = useQuery(myConsecrationQuery(user?.id));
   const { data, isLoading, error } = useQuery(dayQuery(n, mine?.consecration_id));
-  const { data: progress, refetch } = useQuery(myProgressQuery(mine?.id));
+  const { data: progress, isLoading: progressLoading, refetch } = useQuery(myProgressQuery(mine?.id));
 
   const [scale, setScale] = useState(1);
   const [light, setLight] = useState(false);
@@ -39,6 +39,7 @@ function DiaPage() {
   const [saving, setSaving] = useState(false);
 
   const record = (progress ?? []).find((p) => p.day_number === n);
+  const availableThrough = nextAvailableDay(progress);
 
   const upsert = async (patch: Record<string, unknown>) => {
     if (!user || !mine) return;
@@ -69,7 +70,7 @@ function DiaPage() {
     }
   };
 
-  if (isLoading)
+  if (isLoading || progressLoading)
     return (
       <AppShell title={`Día ${n}`}>
         <LoadingState />
@@ -88,6 +89,23 @@ function DiaPage() {
       </AppShell>
     );
 
+  if (n > availableThrough)
+    return (
+      <AppShell title={`Día ${n}`} back>
+        <div className="surface-sacred rounded-2xl p-5 text-center">
+          <Lock className="mx-auto size-8 text-primary" aria-hidden />
+          <h1 className="mt-3 font-display text-xl">Día bloqueado</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Completa el Día {availableThrough} para continuar tu camino.
+          </p>
+          <Button asChild className="mt-5 w-full">
+            <Link to="/dia/$dayNumber" params={{ dayNumber: String(availableThrough) }}>
+              Ir al Día {availableThrough}
+            </Link>
+          </Button>
+        </div>
+      </AppShell>
+    );
   const { day, sections, scripture, doctrine, questions, media } = data;
   const podcast = media.find((m) => m.asset_type === "podcast");
 
