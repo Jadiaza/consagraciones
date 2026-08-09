@@ -1,0 +1,1 @@
+var e=`/assets/san-miguel-hero-onIh9d5Y.jpg`;export{e as t};
