@@ -16,11 +16,11 @@ import { Route as RecursosRouteImport } from './routes/recursos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCoronillaRouteImport } from './routes/_authenticated/coronilla'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedDiaRouteImport } from './routes/_authenticated/dia'
 import { Route as AuthenticatedDiasRouteImport } from './routes/_authenticated/dias'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as AuthenticatedDiaIndexRouteImport } from './routes/_authenticated/dia.index'
 import { Route as AuthenticatedDiaDayNumberRouteImport } from './routes/_authenticated/dia.$dayNumber'
 
 const IndexRoute = IndexRouteImport.update({
@@ -57,11 +57,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDiaRoute = AuthenticatedDiaRouteImport.update({
-  id: '/dia',
-  path: '/dia',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDiasRoute = AuthenticatedDiasRouteImport.update({
   id: '/dias',
   path: '/dias',
@@ -82,11 +77,16 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthenticatedDiaIndexRoute = AuthenticatedDiaIndexRouteImport.update({
+  id: '/dia/',
+  path: '/dia/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDiaDayNumberRoute =
   AuthenticatedDiaDayNumberRouteImport.update({
-    id: '/$dayNumber',
-    path: '/$dayNumber',
-    getParentRoute: () => AuthenticatedDiaRoute,
+    id: '/dia/$dayNumber',
+    path: '/dia/$dayNumber',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -96,12 +96,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/coronilla': typeof AuthenticatedCoronillaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/dia': typeof AuthenticatedDiaRouteWithChildren
   '/dias': typeof AuthenticatedDiasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/dia/$dayNumber': typeof AuthenticatedDiaDayNumberRoute
+  '/dia/': typeof AuthenticatedDiaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,12 +110,12 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/coronilla': typeof AuthenticatedCoronillaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/dia': typeof AuthenticatedDiaRouteWithChildren
   '/dias': typeof AuthenticatedDiasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/dia/$dayNumber': typeof AuthenticatedDiaDayNumberRoute
+  '/dia': typeof AuthenticatedDiaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -126,12 +126,12 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/coronilla': typeof AuthenticatedCoronillaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/dia': typeof AuthenticatedDiaRouteWithChildren
   '/_authenticated/dias': typeof AuthenticatedDiasRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/_authenticated/dia/$dayNumber': typeof AuthenticatedDiaDayNumberRoute
+  '/_authenticated/dia/': typeof AuthenticatedDiaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,12 +142,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/coronilla'
     | '/dashboard'
-    | '/dia'
     | '/dias'
     | '/onboarding'
     | '/perfil'
     | '/auth/reset-password'
     | '/dia/$dayNumber'
+    | '/dia/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -156,12 +156,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/coronilla'
     | '/dashboard'
-    | '/dia'
     | '/dias'
     | '/onboarding'
     | '/perfil'
     | '/auth/reset-password'
     | '/dia/$dayNumber'
+    | '/dia'
   id:
     | '__root__'
     | '/'
@@ -171,12 +171,12 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/coronilla'
     | '/_authenticated/dashboard'
-    | '/_authenticated/dia'
     | '/_authenticated/dias'
     | '/_authenticated/onboarding'
     | '/_authenticated/perfil'
     | '/auth/reset-password'
     | '/_authenticated/dia/$dayNumber'
+    | '/_authenticated/dia/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -237,13 +237,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/dia': {
-      id: '/_authenticated/dia'
-      path: '/dia'
-      fullPath: '/dia'
-      preLoaderRoute: typeof AuthenticatedDiaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/dias': {
       id: '/_authenticated/dias'
       path: '/dias'
@@ -272,45 +265,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_authenticated/dia/': {
+      id: '/_authenticated/dia/'
+      path: '/dia'
+      fullPath: '/dia/'
+      preLoaderRoute: typeof AuthenticatedDiaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dia/$dayNumber': {
       id: '/_authenticated/dia/$dayNumber'
-      path: '/$dayNumber'
+      path: '/dia/$dayNumber'
       fullPath: '/dia/$dayNumber'
       preLoaderRoute: typeof AuthenticatedDiaDayNumberRouteImport
-      parentRoute: typeof AuthenticatedDiaRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
-
-interface AuthenticatedDiaRouteChildren {
-  AuthenticatedDiaDayNumberRoute: typeof AuthenticatedDiaDayNumberRoute
-}
-
-const AuthenticatedDiaRouteChildren: AuthenticatedDiaRouteChildren = {
-  AuthenticatedDiaDayNumberRoute: AuthenticatedDiaDayNumberRoute,
-}
-
-const AuthenticatedDiaRouteWithChildren =
-  AuthenticatedDiaRoute._addFileChildren(AuthenticatedDiaRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCoronillaRoute: typeof AuthenticatedCoronillaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedDiaRoute: typeof AuthenticatedDiaRouteWithChildren
   AuthenticatedDiasRoute: typeof AuthenticatedDiasRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedDiaDayNumberRoute: typeof AuthenticatedDiaDayNumberRoute
+  AuthenticatedDiaIndexRoute: typeof AuthenticatedDiaIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCoronillaRoute: AuthenticatedCoronillaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedDiaRoute: AuthenticatedDiaRouteWithChildren,
   AuthenticatedDiasRoute: AuthenticatedDiasRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedDiaDayNumberRoute: AuthenticatedDiaDayNumberRoute,
+  AuthenticatedDiaIndexRoute: AuthenticatedDiaIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
