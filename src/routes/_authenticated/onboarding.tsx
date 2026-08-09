@@ -52,6 +52,7 @@ function Onboarding() {
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [intention, setIntention] = useState("");
   const [busy, setBusy] = useState(false);
+  const expandedStage = stages?.find((stage) => stage.id === expandedStageId);
 
   useEffect(() => {
     if (!selectedConsecrationId && available?.[0]) setSelectedConsecrationId(available[0].id);
@@ -155,6 +156,23 @@ function Onboarding() {
                 }
               />
             ))}
+            {expandedStage && (
+              <aside
+                aria-live="polite"
+                className="min-h-28 rounded-[20px] border border-[#c99a3d]/25 bg-[#0b2744]/95 p-5 shadow-[0_10px_28px_rgba(0,0,0,.18)]"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e2b85e]">
+                  Descripción de la etapa {romanize(expandedStage.stage_number)}
+                </p>
+                <h2 className="mt-1 font-display text-lg font-semibold text-[#f5f1e8]">
+                  {expandedStage.title}
+                </h2>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#f5f1e8]/78">
+                  {expandedStage.description?.trim() ||
+                    "Esta etapa aún no tiene una descripción publicada."}
+                </p>
+              </aside>
+            )}
           </section>
 
           <div className="px-5 sm:px-7">
@@ -260,7 +278,6 @@ function OnboardingStageCard({
   stageNumber,
   title,
   motto,
-  description,
   startDay,
   endDay,
   completedDays,
@@ -270,7 +287,6 @@ function OnboardingStageCard({
   stageNumber: number;
   title: string;
   motto?: string | null;
-  description?: string | null;
   startDay: number;
   endDay: number;
   completedDays: number;
@@ -285,7 +301,7 @@ function OnboardingStageCard({
       aria-expanded={expanded}
       onClick={onToggle}
       aria-label={`Etapa ${romanize(stageNumber)}: ${title}`}
-      className="group relative grid min-h-32 grid-cols-[58px_52px_minmax(0,1fr)_24px] items-stretch overflow-hidden rounded-[20px] border border-[#c99a3d]/20 bg-[linear-gradient(180deg,rgba(13,40,70,.94),rgba(7,28,50,.98))] shadow-[0_10px_28px_rgba(0,0,0,.18)] transition-transform motion-safe:hover:-translate-y-0.5 sm:grid-cols-[68px_58px_minmax(0,1fr)_28px]"
+      className={`group relative grid h-32 w-full grid-cols-[58px_52px_minmax(0,1fr)_24px] items-stretch overflow-hidden rounded-[20px] border border-[#c99a3d]/20 bg-[linear-gradient(180deg,rgba(13,40,70,.94),rgba(7,28,50,.98))] shadow-[0_10px_28px_rgba(0,0,0,.18)] transition-transform motion-safe:hover:-translate-y-0.5 sm:grid-cols-[68px_58px_minmax(0,1fr)_28px] ${expanded ? "border-[#e2b85e]/70 ring-1 ring-[#e2b85e]/25" : ""}`}
     >
       <div className="flex items-center justify-center pl-2">
         <span className="flex size-12 items-center justify-center rounded-full border border-[#c99a3d]/35 bg-[#061426]/65 text-[#e2b85e] shadow-[0_0_20px_rgba(226,184,94,.1)] sm:size-14">
@@ -306,13 +322,6 @@ function OnboardingStageCard({
         </h2>
         {motto && (
           <p className="mt-1 line-clamp-2 text-[13px] text-[#8ea6c4] sm:text-sm">{motto}</p>
-        )}
-        {expanded && (
-          <div className="mt-3 border-t border-[#c99a3d]/20 pt-3">
-            <p className="whitespace-pre-wrap text-left text-[13px] leading-relaxed text-[#f5f1e8]/78 sm:text-sm">
-              {description?.trim() || "Esta etapa aún no tiene una descripción publicada."}
-            </p>
-          </div>
         )}
         <p className="mt-2 flex items-center gap-1.5 text-[11px] text-[#e2b85e] sm:text-xs">
           <CalendarDays className="size-3.5 shrink-0" aria-hidden />
