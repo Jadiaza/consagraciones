@@ -48,6 +48,7 @@ function Onboarding() {
   const selectedConsecration = available?.find((item) => item.id === selectedConsecrationId);
   const durationDays = selectedConsecration?.duration_days ?? 33;
   const [step, setStep] = useState(0);
+  const [expandedStageId, setExpandedStageId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [intention, setIntention] = useState("");
   const [busy, setBusy] = useState(false);
@@ -144,9 +145,14 @@ function Onboarding() {
                 stageNumber={stage.stage_number}
                 title={stage.title}
                 motto={stage.motto}
+                description={stage.description}
                 startDay={stage.start_day}
                 endDay={stage.end_day}
                 completedDays={0}
+                expanded={expandedStageId === stage.id}
+                onToggle={() =>
+                  setExpandedStageId((current) => (current === stage.id ? null : stage.id))
+                }
               />
             ))}
           </section>
@@ -254,21 +260,30 @@ function OnboardingStageCard({
   stageNumber,
   title,
   motto,
+  description,
   startDay,
   endDay,
   completedDays,
+  expanded,
+  onToggle,
 }: {
   stageNumber: number;
   title: string;
   motto?: string | null;
+  description?: string | null;
   startDay: number;
   endDay: number;
   completedDays: number;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
   const total = endDay - startDay + 1;
   const Icon = STAGE_ICONS[stageNumber - 1] ?? BookOpen;
   return (
-    <article
+    <button
+      type="button"
+      aria-expanded={expanded}
+      onClick={onToggle}
       aria-label={`Etapa ${romanize(stageNumber)}: ${title}`}
       className="group relative grid min-h-32 grid-cols-[58px_52px_minmax(0,1fr)_24px] items-stretch overflow-hidden rounded-[20px] border border-[#c99a3d]/20 bg-[linear-gradient(180deg,rgba(13,40,70,.94),rgba(7,28,50,.98))] shadow-[0_10px_28px_rgba(0,0,0,.18)] transition-transform motion-safe:hover:-translate-y-0.5 sm:grid-cols-[68px_58px_minmax(0,1fr)_28px]"
     >
@@ -292,14 +307,24 @@ function OnboardingStageCard({
         {motto && (
           <p className="mt-1 line-clamp-2 text-[13px] text-[#8ea6c4] sm:text-sm">{motto}</p>
         )}
+        {expanded && (
+          <div className="mt-3 border-t border-[#c99a3d]/20 pt-3">
+            <p className="whitespace-pre-wrap text-left text-[13px] leading-relaxed text-[#f5f1e8]/78 sm:text-sm">
+              {description?.trim() || "Esta etapa aún no tiene una descripción publicada."}
+            </p>
+          </div>
+        )}
         <p className="mt-2 flex items-center gap-1.5 text-[11px] text-[#e2b85e] sm:text-xs">
           <CalendarDays className="size-3.5 shrink-0" aria-hidden />
           Días {startDay}–{endDay} · {completedDays}/{total} completados
         </p>
       </div>
       <div className="flex items-center justify-center pr-2 text-[#c99a3d]">
-        <ChevronRight className="size-7" aria-hidden />
+        <ChevronRight
+          className={`size-7 transition-transform ${expanded ? "rotate-90" : ""}`}
+          aria-hidden
+        />
       </div>
-    </article>
+    </button>
   );
 }
