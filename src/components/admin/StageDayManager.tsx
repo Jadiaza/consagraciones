@@ -86,6 +86,8 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
       qc.invalidateQueries({ queryKey: ["admin-days", consecrationId] }),
       qc.invalidateQueries({ queryKey: ["admin-dashboard"] }),
       qc.invalidateQueries({ queryKey: [mode, consecrationId] }),
+      qc.invalidateQueries({ queryKey: ["day"] }),
+      qc.invalidateQueries({ queryKey: ["days"] }),
     ]);
   };
   const save = useMutation({
@@ -127,9 +129,20 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
           published_at: dayForm.status === "published" ? new Date().toISOString() : null,
         };
         const r = selected
-          ? await supabase.from("consecration_days").update(payload).eq("id", selected)
-          : await supabase.from("consecration_days").insert(payload);
+          ? await supabase
+              .from("consecration_days")
+              .update(payload)
+              .eq("id", selected)
+              .eq("consecration_id", consecrationId)
+              .select("id,consecration_id,day_number,status")
+              .single()
+          : await supabase
+              .from("consecration_days")
+              .insert(payload)
+              .select("id,consecration_id,day_number,status")
+              .single();
         if (r.error) throw r.error;
+        if (!r.data) throw new Error("Supabase no confirmó el día guardado.");
       }
     },
     onSuccess: async () => {

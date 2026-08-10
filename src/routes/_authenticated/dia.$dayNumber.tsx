@@ -19,7 +19,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { dayQuery, myConsecrationQuery, myProgressQuery, nextAvailableDay } from "@/lib/consecration";
+import {
+  dayQuery,
+  myConsecrationQuery,
+  myProgressQuery,
+  nextAvailableDay,
+} from "@/lib/consecration";
 import { MediaService } from "@/lib/media-service";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +36,11 @@ function DiaPage() {
   const { user } = useAuth();
   const { data: mine } = useQuery(myConsecrationQuery(user?.id));
   const { data, isLoading, error } = useQuery(dayQuery(n, mine?.consecration_id));
-  const { data: progress, isLoading: progressLoading, refetch } = useQuery(myProgressQuery(mine?.id));
+  const {
+    data: progress,
+    isLoading: progressLoading,
+    refetch,
+  } = useQuery(myProgressQuery(mine?.id));
 
   const [scale, setScale] = useState(1);
   const [light, setLight] = useState(false);
@@ -142,6 +151,12 @@ function DiaPage() {
         {day.subtitle && <p className="mt-1 text-sm text-muted-foreground">{day.subtitle}</p>}
         {day.motto && <p className="mt-2 font-display text-primary">«{day.motto}»</p>}
 
+        {day.objective && (
+          <div className="surface-sacred mt-4 rounded-2xl p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-primary">Objetivo del día</p>
+            <p className="mt-2 leading-relaxed">{day.objective}</p>
+          </div>
+        )}
         {day.introduction && (
           <>
             <SectionTitle hint="Ponte en la presencia de Dios">1 · Preparación</SectionTitle>

@@ -25,7 +25,10 @@ export function MeditationCard({ text }: { text?: string | null }) {
 
         <div className="mt-5 flex flex-col items-center">
           <div className="relative flex size-32 items-center justify-center rounded-full border border-primary/40">
-            <span className="absolute inset-0 animate-halo rounded-full bg-primary/10" aria-hidden />
+            <span
+              className="absolute inset-0 animate-halo rounded-full bg-primary/10"
+              aria-hidden
+            />
             <span className="font-display text-2xl text-primary">
               {remaining === null
                 ? `${minutes} min`
@@ -34,11 +37,16 @@ export function MeditationCard({ text }: { text?: string | null }) {
           </div>
 
           {!running && (
-            <div className="mt-4 flex gap-2">
+            <div
+              className="mt-4 grid w-full grid-cols-3 gap-2"
+              role="group"
+              aria-label="Duración de la meditación"
+            >
               {OPTIONS.map((value) => (
                 <Button
                   key={value}
                   size="sm"
+                  className="w-full"
                   variant={minutes === value ? "default" : "outline"}
                   onClick={() => {
                     setMinutes(value);
@@ -59,7 +67,9 @@ export function MeditationCard({ text }: { text?: string | null }) {
           >
             {running ? "Detener" : finished ? "Meditar nuevamente" : "Comenzar meditación"}
           </Button>
-          {finished && <p className="mt-3 text-sm text-primary">Que este silencio te acerque más a Dios.</p>}
+          {finished && (
+            <p className="mt-3 text-sm text-primary">Que este silencio te acerque más a Dios.</p>
+          )}
         </div>
       </div>
     </div>
