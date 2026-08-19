@@ -186,7 +186,7 @@ function AdminPage() {
           setMenu(false);
         }}
       />
-      <main className="relative min-h-dvh lg:pl-[244px]">
+      <main className="relative min-h-dvh lg:pl-[292px]">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-white/10 bg-[#07182a]/95 px-4 text-white backdrop-blur lg:hidden">
           <button onClick={() => setMenu(true)}>
             <Menu />
@@ -194,7 +194,7 @@ function AdminPage() {
           <ShieldCheck className="text-[#d6a642]" />
           <b>Administración</b>
         </header>
-        <div className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">
+        <div className="w-full p-4 sm:p-6 lg:p-7">
           <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
               <p className="text-xs uppercase tracking-[.2em] text-[#c8a35a]">
@@ -371,11 +371,11 @@ function Sidebar({
         className={`fixed inset-0 z-30 bg-black/70 lg:hidden ${open ? "block" : "hidden"}`}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[244px] flex-col border-r border-white/10 bg-[radial-gradient(circle_at_30%_0%,rgba(212,175,55,.20),transparent_28%),linear-gradient(180deg,#061826_0%,#0b2b49_100%)] text-white shadow-xl transition-transform lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-[292px] flex-col border-r border-white/10 bg-[radial-gradient(circle_at_30%_0%,rgba(212,175,55,.20),transparent_28%),linear-gradient(180deg,#061826_0%,#0b2b49_100%)] text-white shadow-xl transition-transform lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex h-24 items-center gap-3 border-b border-white/10 px-5">
-          <span className="grid size-12 place-items-center rounded-xl border border-[#c99a3d]/40 bg-[#c99a3d]/10">
-            <ShieldCheck className="text-[#d9ac4c]" />
+          <span className="grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-[#f3c756] to-[#d4af37] text-[#061826] shadow-[0_14px_34px_rgba(212,175,55,.22)]">
+            <ShieldCheck />
           </span>
           <div>
             <p className="text-xs uppercase tracking-wider text-[#d9ac4c]">Consagración</p>
@@ -469,11 +469,13 @@ function Dashboard({
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map(([Icon, label, value, sub]) => (
+        {stats.map(([Icon, label, value, sub], index) => (
           <Panel key={label} bare>
             <div className="flex items-center gap-4 p-5">
-              <span className="grid size-12 place-items-center rounded-xl border border-[#d6a642]/30 bg-[#d6a642]/10">
-                <Icon className="text-[#e0ad45]" />
+              <span
+                className={`grid size-12 place-items-center rounded-xl ${["bg-violet-100 text-violet-700", "bg-blue-100 text-blue-700", "bg-emerald-100 text-emerald-700", "bg-amber-100 text-amber-700"][index]}`}
+              >
+                <Icon />
               </span>
               <div>
                 <p className="text-xs text-[#b5c3d1]">{label}</p>
