@@ -3,10 +3,10 @@ import { Pencil, Plus, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 
 type Value = string | number | boolean;
@@ -216,7 +216,7 @@ function RelatedEditor({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<Form>({ ...config.defaults });
   const [busy, setBusy] = useState(false);
-  const client = supabase as unknown as { from: (table: string) => any };
+  const client = supabase;
   const queryKey = ["admin-day-related", config.table, dayId];
   const query = useQuery({
     queryKey,
@@ -294,7 +294,10 @@ function RelatedEditor({
   };
 
   return (
-    <details defaultOpen={defaultOpen} className="rounded-xl border border-white/10 bg-[#071d34]/55">
+    <details
+      defaultOpen={defaultOpen}
+      className="rounded-xl border border-white/10 bg-[#071d34]/55"
+    >
       <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-[#f5f1e8]">
         {config.title}{" "}
         <span className="ml-2 text-xs text-white/45">({query.data?.length ?? 0})</span>
@@ -366,11 +369,7 @@ function EditorField({
         {field.required ? " *" : ""}
       </Label>
       {field.kind === "textarea" ? (
-        <Textarea
-          rows={4}
-          value={String(value ?? "")}
-          onChange={(event) => setValue(event.target.value)}
-        />
+        <RichTextEditor rows={4} value={String(value ?? "")} onChange={setValue} />
       ) : field.kind === "select" ? (
         <select
           className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"

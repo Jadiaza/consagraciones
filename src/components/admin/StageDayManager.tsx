@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Save, Trash2 } from "lucide-react";
+import { Braces, FileText, Pencil, Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { DayRelatedContentManager } from "@/components/admin/DayRelatedContentManager";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 
 type Mode = "stages" | "days";
@@ -51,6 +53,9 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
   const [selected, setSelected] = useState<string | null>(null);
   const [stageForm, setStageForm] = useState(emptyStage);
   const [dayForm, setDayForm] = useState(emptyDay);
+  const [dayEditorView, setDayEditorView] = useState<"form" | "json">("form");
+  const [dayJson, setDayJson] = useState(() => JSON.stringify(emptyDay, null, 2));
+  const [dayJsonError, setDayJsonError] = useState<string | null>(null);
   const stages = useQuery({
     queryKey: ["admin-stages", consecrationId],
     queryFn: async () => {
@@ -79,6 +84,9 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
     setSelected(null);
     setStageForm(emptyStage);
     setDayForm(emptyDay);
+    setDayEditorView("form");
+    setDayJson(JSON.stringify(emptyDay, null, 2));
+    setDayJsonError(null);
   }, [mode, consecrationId]);
   const refresh = async () => {
     await Promise.all([
@@ -108,6 +116,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
           : await supabase.from("consecration_stages").insert(payload);
         if (r.error) throw r.error;
       } else {
+        if (dayJsonError) throw new Error("Corrige el JSON antes de guardar.");
         if (!dayForm.title.trim()) throw new Error("Escribe el título del día.");
         const nullable = (v: string) => v.trim() || null;
         const payload = {
@@ -172,6 +181,9 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
     setSelected(null);
     setStageForm(emptyStage);
     setDayForm(emptyDay);
+    setDayEditorView("form");
+    setDayJson(JSON.stringify(emptyDay, null, 2));
+    setDayJsonError(null);
   }
   function chooseStage(item: typeof stages.data extends Array<infer T> ? T : never) {
     setSelected(item.id);
@@ -188,7 +200,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
   }
   function chooseDay(item: typeof days.data extends Array<infer T> ? T : never) {
     setSelected(item.id);
-    setDayForm({
+    const next = {
       stage_id: item.stage_id ?? "none",
       day_number: item.day_number,
       title: item.title,
@@ -205,7 +217,10 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
       progressive_consecration: item.progressive_consecration ?? "",
       estimated_minutes: item.estimated_minutes,
       status: item.status,
-    });
+    };
+    setDayForm(next);
+    setDayJson(JSON.stringify(next, null, 2));
+    setDayJsonError(null);
   }
   const list = mode === "stages" ? stages.data : days.data;
   return (
@@ -266,7 +281,57 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
             <StageForm form={stageForm} set={setStageForm} />
           ) : (
             <>
-              <DayForm form={dayForm} set={setDayForm} stages={stages.data ?? []} />
+              <Tabs
+                value={dayEditorView}
+                onValueChange={(value) => {
+                  const next = value as "form" | "json";
+                  setDayEditorView(next);
+                  if (next === "json") setDayJson(JSON.stringify(dayForm, null, 2));
+                }}
+              >
+                <TabsList className="grid w-full grid-cols-2 bg-[#061426]/80">
+                  <TabsTrigger value="form">
+                    <FileText className="size-4" />
+                    Formulario
+                  </TabsTrigger>
+                  <TabsTrigger value="json">
+                    <Braces className="size-4" />
+                    JSON
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="form" className="space-y-4 pt-3">
+                  <DayForm form={dayForm} set={setDayForm} stages={stages.data ?? []} />
+                </TabsContent>
+                <TabsContent value="json" className="space-y-3 pt-3">
+                  <div className="rounded-xl border border-[#d6a642]/20 bg-[#d6a642]/5 p-3 text-xs leading-relaxed text-white/65">
+                    Esta vista permite editar todos los campos principales del día. Los cambios se
+                    sincronizan automáticamente cuando el JSON es válido.
+                  </div>
+                  <Textarea
+                    className="min-h-[620px] font-mono text-xs leading-relaxed"
+                    spellCheck={false}
+                    value={dayJson}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setDayJson(value);
+                      try {
+                        const parsed = normalizeDayJson(JSON.parse(value));
+                        setDayForm(parsed);
+                        setDayJsonError(null);
+                      } catch (error) {
+                        setDayJsonError(readJsonError(error));
+                      }
+                    }}
+                  />
+                  {dayJsonError ? (
+                    <p role="alert" className="text-sm text-red-300">
+                      {dayJsonError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-emerald-300">JSON válido y sincronizado.</p>
+                  )}
+                </TabsContent>
+              </Tabs>
               {selected ? (
                 <DayRelatedContentManager dayId={selected} consecrationId={consecrationId} />
               ) : (
@@ -293,7 +358,10 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
             ) : (
               <span />
             )}
-            <Button disabled={save.isPending} className="bg-[#c99a3d] text-[#061426]">
+            <Button
+              disabled={save.isPending || Boolean(dayJsonError)}
+              className="bg-[#c99a3d] text-[#061426]"
+            >
               <Save />
               Guardar
             </Button>
@@ -423,69 +491,69 @@ function DayForm({
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Objetivo">
-          <Textarea
+          <RichTextEditor
             rows={3}
             value={form.objective}
-            onChange={(e) => set({ ...form, objective: e.target.value })}
+            onChange={(value) => set({ ...form, objective: value })}
           />
         </Field>
         <Field label="Lema">
           <Textarea
             rows={3}
             value={form.motto}
-            onChange={(e) => set({ ...form, motto: e.target.value })}
+            onChange={(event) => set({ ...form, motto: event.target.value })}
           />
         </Field>
       </div>
       <Field label="Introducción">
-        <Textarea
+        <RichTextEditor
           rows={4}
           value={form.introduction}
-          onChange={(e) => set({ ...form, introduction: e.target.value })}
+          onChange={(value) => set({ ...form, introduction: value })}
         />
       </Field>
       <Field label="Enseñanza">
-        <Textarea
+        <RichTextEditor
           rows={8}
           value={form.teaching}
-          onChange={(e) => set({ ...form, teaching: e.target.value })}
+          onChange={(value) => set({ ...form, teaching: value })}
         />
       </Field>
       <Field label="Enseñanza de la Iglesia">
-        <Textarea
+        <RichTextEditor
           rows={5}
           value={form.church_teaching}
-          onChange={(e) => set({ ...form, church_teaching: e.target.value })}
+          onChange={(value) => set({ ...form, church_teaching: value })}
         />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Meditación">
-          <Textarea
+          <RichTextEditor
             rows={5}
             value={form.meditation}
-            onChange={(e) => set({ ...form, meditation: e.target.value })}
+            onChange={(value) => set({ ...form, meditation: value })}
           />
         </Field>
         <Field label="Propósito">
-          <Textarea
+          <RichTextEditor
             rows={5}
             value={form.purpose}
-            onChange={(e) => set({ ...form, purpose: e.target.value })}
+            onChange={(value) => set({ ...form, purpose: value })}
           />
         </Field>
       </div>
       <Field label="Oración">
-        <Textarea
+        <RichTextEditor
           rows={5}
           value={form.prayer}
-          onChange={(e) => set({ ...form, prayer: e.target.value })}
+          onChange={(value) => set({ ...form, prayer: value })}
         />
       </Field>
       <Field label="Consagración progresiva">
-        <Textarea
+        <RichTextEditor
           rows={5}
           value={form.progressive_consecration}
-          onChange={(e) => set({ ...form, progressive_consecration: e.target.value })}
+          onChange={(value) => set({ ...form, progressive_consecration: value })}
         />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -515,4 +583,43 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       {children}
     </div>
   );
+}
+
+function normalizeDayJson(value: unknown): typeof emptyDay {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("El contenido debe ser un objeto JSON.");
+  }
+  const source = value as Record<string, unknown>;
+  const text = (key: keyof typeof emptyDay) => String(source[key] ?? "");
+  const number = (key: keyof typeof emptyDay, fallback: number) => {
+    const parsed = Number(source[key] ?? fallback);
+    if (!Number.isFinite(parsed)) throw new Error(`El campo ${key} debe ser numérico.`);
+    return parsed;
+  };
+  const status = text("status");
+  if (status !== "draft" && status !== "published") {
+    throw new Error('El campo status debe ser "draft" o "published".');
+  }
+  return {
+    stage_id: text("stage_id") || "none",
+    day_number: number("day_number", 1),
+    title: text("title"),
+    subtitle: text("subtitle"),
+    objective: text("objective"),
+    motto: text("motto"),
+    hero_image: text("hero_image"),
+    introduction: text("introduction"),
+    teaching: text("teaching"),
+    church_teaching: text("church_teaching"),
+    meditation: text("meditation"),
+    purpose: text("purpose"),
+    prayer: text("prayer"),
+    progressive_consecration: text("progressive_consecration"),
+    estimated_minutes: number("estimated_minutes", 25),
+    status,
+  };
+}
+
+function readJsonError(error: unknown) {
+  return error instanceof Error ? error.message : "El JSON no es válido.";
 }

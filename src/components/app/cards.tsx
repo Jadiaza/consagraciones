@@ -3,6 +3,7 @@ import { Check, ChevronRight, Loader2, WifiOff, AlertTriangle, Inbox, Lock } fro
 import type { ReactNode } from "react";
 
 import { Progress } from "@/components/ui/progress";
+import { SacredText } from "@/components/app/SacredText";
 import { cn } from "@/lib/utils";
 import { stageAccent } from "@/lib/consecration";
 
@@ -41,7 +42,9 @@ export function StageCard({
         style={{ backgroundColor: stageAccent(stageNumber) }}
       />
       <div className="min-w-0 flex-1">
-        <p className="text-xs uppercase tracking-[0.2em] text-primary">Etapa {romanize(stageNumber)}</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-primary">
+          Etapa {romanize(stageNumber)}
+        </p>
         <p className="truncate font-display text-base">{title}</p>
         {motto && <p className="truncate text-sm text-muted-foreground">{motto}</p>}
         <p className="mt-1 text-xs text-muted-foreground">
@@ -73,7 +76,9 @@ export function DayCard({
       <span
         className={cn(
           "flex size-9 shrink-0 items-center justify-center rounded-full border text-sm font-medium",
-          completed ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground",
+          completed
+            ? "border-primary bg-primary text-primary-foreground"
+            : "border-border text-muted-foreground",
         )}
       >
         {dayNumber}
@@ -137,8 +142,8 @@ export function ScriptureCard({
   return (
     <blockquote className="rounded-2xl border-l-2 border-primary bg-secondary/40 p-4">
       <p className="text-xs uppercase tracking-[0.18em] text-primary">{citation}</p>
-      {passage && <p className="mt-2 text-[15px] leading-relaxed italic">«{passage}»</p>}
-      {commentary && <p className="mt-2 text-sm text-muted-foreground">{commentary}</p>}
+      {passage && <SacredText className="mt-2 italic" children={`«${passage}»`} />}
+      {commentary && <SacredText className="mt-2 text-muted-foreground" children={commentary} />}
     </blockquote>
   );
 }
@@ -172,7 +177,7 @@ export function DoctrineCard({
       <p className="text-xs uppercase tracking-[0.18em] text-primary">
         {DOCTRINE_LABEL[referenceType] ?? referenceType}
       </p>
-      {excerpt && <p className="mt-2 text-[15px] leading-relaxed">{excerpt}</p>}
+      {excerpt && <SacredText className="mt-2" children={excerpt} />}
       <p className="mt-2 text-xs text-muted-foreground">
         {[author, work, reference].filter(Boolean).join(" · ")}
       </p>
@@ -180,11 +185,19 @@ export function DoctrineCard({
   );
 }
 
-export function PrayerCard({ title, body, response }: { title?: string; body: string; response?: string | null }) {
+export function PrayerCard({
+  title,
+  body,
+  response,
+}: {
+  title?: string;
+  body: string;
+  response?: string | null;
+}) {
   return (
     <div className="rounded-2xl border border-primary/30 bg-secondary/30 p-4">
       {title && <p className="font-display text-sm text-primary">{title}</p>}
-      <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed">{body}</p>
+      <SacredText className="mt-2" children={body} />
       {response && <p className="mt-2 text-[15px] font-medium text-primary">{response}</p>}
     </div>
   );
@@ -207,7 +220,9 @@ export function ResourceCard({
     >
       <span className="min-w-0 flex-1">
         <span className="block truncate font-display text-sm">{title}</span>
-        {summary && <span className="mt-0.5 block truncate text-xs text-muted-foreground">{summary}</span>}
+        {summary && (
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">{summary}</span>
+        )}
       </span>
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
     </button>
@@ -238,7 +253,9 @@ export function ErrorState({ message }: { message?: string }) {
     <div className="surface-sacred flex flex-col items-center gap-2 rounded-2xl p-8 text-center">
       <AlertTriangle className="size-6 text-destructive" aria-hidden />
       <p className="font-display">No pudimos cargar este contenido</p>
-      <p className="text-sm text-muted-foreground">{message ?? "Intenta nuevamente en unos momentos."}</p>
+      <p className="text-sm text-muted-foreground">
+        {message ?? "Intenta nuevamente en unos momentos."}
+      </p>
     </div>
   );
 }
@@ -248,7 +265,9 @@ export function OfflineState() {
     <div className="surface-sacred flex flex-col items-center gap-2 rounded-2xl p-8 text-center">
       <WifiOff className="size-6 text-muted-foreground" aria-hidden />
       <p className="font-display">Sin conexión</p>
-      <p className="text-sm text-muted-foreground">Tu camino continúa. Vuelve a intentarlo cuando tengas conexión.</p>
+      <p className="text-sm text-muted-foreground">
+        Tu camino continúa. Vuelve a intentarlo cuando tengas conexión.
+      </p>
     </div>
   );
 }
