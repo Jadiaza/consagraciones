@@ -241,6 +241,42 @@
   color: #27364a;
 }
 
+/* Estados de botones del administrador: el texto siempre conserva contraste. */
+.admin-shell main button.inline-flex {
+  color: #172536;
+}
+
+.admin-shell main button.inline-flex.border-input {
+  border-color: rgb(15 23 42 / 16%);
+  background: #ffffff;
+  color: #172536;
+}
+
+.admin-shell main button.inline-flex.border-input:hover {
+  border-color: rgb(183 121 31 / 45%);
+  background: #fffbeb;
+  color: #6b4700;
+}
+
+.admin-shell main button.inline-flex.bg-primary,
+.admin-shell main button.inline-flex[class*="from-[#f3c756]"] {
+  color: #07182a;
+}
+
+.admin-shell main button.inline-flex.bg-destructive {
+  color: #ffffff;
+}
+
+.admin-shell main button.inline-flex:focus-visible {
+  outline: 2px solid #b7791f;
+  outline-offset: 2px;
+}
+
+.admin-shell main button.inline-flex:disabled {
+  color: #667085;
+  opacity: 0.58;
+}
+
 @media (hover: hover) {
   .admin-shell .surface-sacred:hover {
     border-color: rgb(212 175 55 / 28%);
