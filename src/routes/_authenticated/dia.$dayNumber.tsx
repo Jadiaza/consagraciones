@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Minus, Plus, Sun, Moon } from "lucide-react";
-import { useState } from "react";
+import { Lock, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app/AppShell";
 import { AudioPlayer } from "@/components/app/AudioPlayer";
+import { DayReadingNavigation } from "@/components/app/DayReadingNavigation";
 import { MeditationCard } from "@/components/app/MeditationTimer";
+import { ReadingToolbar, type ReadingPreferences } from "@/components/app/ReadingToolbar";
+import { SacredText } from "@/components/app/SacredText";
 import {
   DoctrineCard,
   ErrorState,
@@ -30,6 +33,15 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dia/$dayNumber")({ component: DiaPage });
 
+const READING_PREFERENCES_KEY = "lvj-consagraciones-reading-preferences";
+const DEFAULT_READING_PREFERENCES: ReadingPreferences = {
+  size: 17,
+  theme: "dark",
+  font: "serif",
+  align: "left",
+  spacing: "comfortable",
+};
+
 function DiaPage() {
   const { dayNumber } = Route.useParams();
   const n = Number(dayNumber);
@@ -42,10 +54,28 @@ function DiaPage() {
     refetch,
   } = useQuery(myProgressQuery(mine?.id));
 
-  const [scale, setScale] = useState(1);
-  const [light, setLight] = useState(false);
+  const [preferences, setPreferences] = useState<ReadingPreferences>(DEFAULT_READING_PREFERENCES);
+  const [showReadingTools, setShowReadingTools] = useState(false);
   const [journal, setJournal] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(READING_PREFERENCES_KEY);
+      if (saved) setPreferences({ ...DEFAULT_READING_PREFERENCES, ...JSON.parse(saved) });
+    } catch {
+      // Keep safe defaults when storage is unavailable or contains invalid data.
+    }
+  }, []);
+
+  const savePreferences = (next: ReadingPreferences) => {
+    setPreferences(next);
+    try {
+      window.localStorage.setItem(READING_PREFERENCES_KEY, JSON.stringify(next));
+    } catch {
+      // Reading preferences remain active for the current session.
+    }
+  };
 
   const record = (progress ?? []).find((p) => p.day_number === n);
   const availableThrough = nextAvailableDay(progress);
@@ -117,53 +147,73 @@ function DiaPage() {
     );
   const { day, sections, scripture, doctrine, questions, media } = data;
   const podcast = media.find((m) => m.asset_type === "podcast");
+  const navigationSections = [
+    { id: "preparacion", label: "Preparación" },
+    { id: "palabra", label: "Palabra" },
+    ...(day.teaching || sections.length || day.church_teaching || doctrine.length
+      ? [{ id: "ensenanza", label: "Enseñanza" }]
+      : []),
+    { id: "meditacion", label: "Meditación" },
+    ...(day.purpose ? [{ id: "proposito", label: "Propósito" }] : []),
+    ...(day.prayer || day.progressive_consecration ? [{ id: "oracion", label: "Oración" }] : []),
+    { id: "diario", label: "Diario" },
+  ];
 
   return (
     <AppShell
       title={`Día ${n} de 33`}
       back
-      className={cn(light && "reading-light")}
       action={
-        <div className="flex items-center gap-1">
-          <button
-            aria-label="Reducir letra"
-            onClick={() => setScale((s) => Math.max(0.85, s - 0.1))}
-          >
-            <Minus className="size-4" />
-          </button>
-          <button
-            aria-label="Aumentar letra"
-            onClick={() => setScale((s) => Math.min(1.4, s + 0.1))}
-          >
-            <Plus className="size-4" />
-          </button>
-          <button aria-label="Cambiar modo de lectura" onClick={() => setLight((v) => !v)}>
-            {light ? <Moon className="size-4" /> : <Sun className="size-4" />}
-          </button>
-        </div>
+        <button
+          type="button"
+          className="rounded-full border border-primary/25 p-2 text-primary transition hover:bg-primary/10"
+          aria-label="Mostrar preferencias de lectura"
+          aria-expanded={showReadingTools}
+          onClick={() => setShowReadingTools((value) => !value)}
+        >
+          <SlidersHorizontal className="size-4" aria-hidden />
+        </button>
       }
     >
       <div
-        className={cn("rounded-2xl p-1", light && "reading-light bg-background text-foreground")}
-        style={{ fontSize: `${scale}rem` }}
+        className={cn(
+          "reading-surface rounded-[1.4rem] border p-4 shadow-xl sm:p-6",
+          `reading-theme-${preferences.theme}`,
+          `reading-font-${preferences.font}`,
+          `reading-align-${preferences.align}`,
+          `reading-spacing-${preferences.spacing}`,
+        )}
+        style={{ fontSize: `${preferences.size}px` }}
       >
-        <h1 className="font-display text-2xl">{day.title}</h1>
-        {day.subtitle && <p className="mt-1 text-sm text-muted-foreground">{day.subtitle}</p>}
-        {day.motto && <p className="mt-2 font-display text-primary">«{day.motto}»</p>}
+        <header className="reading-day-header">
+          <p className="reading-eyebrow">Día {n} de 33</p>
+          <h1>{day.title}</h1>
+          {day.subtitle && <p className="reading-subtitle">{day.subtitle}</p>}
+          {day.motto && <blockquote className="reading-motto">«{day.motto}»</blockquote>}
+        </header>
+
+        {showReadingTools && (
+          <ReadingToolbar preferences={preferences} onChange={savePreferences} />
+        )}
+
+        <DayReadingNavigation sections={navigationSections} />
+
+        <span id="preparacion" className="reading-anchor" />
 
         {day.objective && (
           <div className="surface-sacred mt-4 rounded-2xl p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-primary">Objetivo del día</p>
-            <p className="mt-2 leading-relaxed">{day.objective}</p>
+            <SacredText className="mt-2" children={day.objective} />
           </div>
         )}
         {day.introduction && (
           <>
             <SectionTitle hint="Ponte en la presencia de Dios">1 · Preparación</SectionTitle>
-            <p className="leading-relaxed">{day.introduction}</p>
+            <SacredText children={day.introduction} />
           </>
         )}
 
+        <span id="palabra" className="reading-anchor" />
         {scripture.length > 0 && (
           <>
             <SectionTitle>2 · Palabra de Dios</SectionTitle>
@@ -191,24 +241,25 @@ function DiaPage() {
           }}
         />
 
+        <span id="ensenanza" className="reading-anchor" />
         {day.teaching && (
           <>
             <SectionTitle>4 · Enseñanza</SectionTitle>
-            <p className="whitespace-pre-line leading-relaxed">{day.teaching}</p>
+            <SacredText children={day.teaching} />
           </>
         )}
 
         {sections.map((section) => (
           <section key={section.id}>
             <SectionTitle>{section.title || "Contenido complementario"}</SectionTitle>
-            {section.body && <p className="whitespace-pre-line leading-relaxed">{section.body}</p>}
+            {section.body && <SacredText children={section.body} />}
           </section>
         ))}
 
         {(day.church_teaching || doctrine.length > 0) && (
           <>
             <SectionTitle>5 · La Iglesia nos enseña</SectionTitle>
-            {day.church_teaching && <p className="mb-3 leading-relaxed">{day.church_teaching}</p>}
+            {day.church_teaching && <SacredText className="mb-3" children={day.church_teaching} />}
             <div className="flex flex-col gap-3">
               {doctrine.map((d) => (
                 <DoctrineCard
@@ -224,6 +275,7 @@ function DiaPage() {
           </>
         )}
 
+        <span id="meditacion" className="reading-anchor" />
         <SectionTitle>6 · Meditación</SectionTitle>
         <MeditationCard text={day.meditation} />
 
@@ -242,11 +294,12 @@ function DiaPage() {
           </>
         )}
 
+        <span id="proposito" className="reading-anchor" />
         {day.purpose && (
           <>
             <SectionTitle>8 · Propósito del día</SectionTitle>
             <div className="surface-sacred rounded-2xl p-4">
-              <p className="leading-relaxed">{day.purpose}</p>
+              <SacredText children={day.purpose} />
               <Button
                 className="mt-4 w-full"
                 variant={record?.purpose_accepted ? "outline" : "default"}
@@ -275,6 +328,7 @@ function DiaPage() {
           </>
         )}
 
+        <span id="oracion" className="reading-anchor" />
         {day.prayer && (
           <>
             <SectionTitle>9 · Oración</SectionTitle>
@@ -294,6 +348,7 @@ function DiaPage() {
           </>
         )}
 
+        <span id="diario" className="reading-anchor" />
         <SectionTitle hint="Estrictamente privado">12 · Diario espiritual</SectionTitle>
         <div className="surface-sacred rounded-2xl p-4">
           <p className="text-sm text-muted-foreground">

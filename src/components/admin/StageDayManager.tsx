@@ -1,8 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Save, Trash2 } from "lucide-react";
+import {
+  Braces,
+  CheckCircle2,
+  Clipboard,
+  FileText,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Save,
+  Trash2,
+  WandSparkles,
+} from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { DayRelatedContentManager } from "@/components/admin/DayRelatedContentManager";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 
 type Mode = "stages" | "days";
@@ -51,6 +64,9 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
   const [selected, setSelected] = useState<string | null>(null);
   const [stageForm, setStageForm] = useState(emptyStage);
   const [dayForm, setDayForm] = useState(emptyDay);
+  const [dayEditorView, setDayEditorView] = useState<"form" | "json">("form");
+  const [dayJson, setDayJson] = useState(() => JSON.stringify(emptyDay, null, 2));
+  const [dayJsonError, setDayJsonError] = useState<string | null>(null);
   const stages = useQuery({
     queryKey: ["admin-stages", consecrationId],
     queryFn: async () => {
@@ -79,6 +95,9 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
     setSelected(null);
     setStageForm(emptyStage);
     setDayForm(emptyDay);
+    setDayEditorView("form");
+    setDayJson(JSON.stringify(emptyDay, null, 2));
+    setDayJsonError(null);
   }, [mode, consecrationId]);
   const refresh = async () => {
     await Promise.all([
@@ -108,6 +127,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
           : await supabase.from("consecration_stages").insert(payload);
         if (r.error) throw r.error;
       } else {
+        if (dayJsonError) throw new Error("Corrige el JSON antes de guardar.");
         if (!dayForm.title.trim()) throw new Error("Escribe el título del día.");
         const nullable = (v: string) => v.trim() || null;
         const payload = {
@@ -172,6 +192,9 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
     setSelected(null);
     setStageForm(emptyStage);
     setDayForm(emptyDay);
+    setDayEditorView("form");
+    setDayJson(JSON.stringify(emptyDay, null, 2));
+    setDayJsonError(null);
   }
   function chooseStage(item: typeof stages.data extends Array<infer T> ? T : never) {
     setSelected(item.id);
@@ -188,7 +211,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
   }
   function chooseDay(item: typeof days.data extends Array<infer T> ? T : never) {
     setSelected(item.id);
-    setDayForm({
+    const next = {
       stage_id: item.stage_id ?? "none",
       day_number: item.day_number,
       title: item.title,
@@ -205,7 +228,10 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
       progressive_consecration: item.progressive_consecration ?? "",
       estimated_minutes: item.estimated_minutes,
       status: item.status,
-    });
+    };
+    setDayForm(next);
+    setDayJson(JSON.stringify(next, null, 2));
+    setDayJsonError(null);
   }
   const list = mode === "stages" ? stages.data : days.data;
   return (
@@ -266,7 +292,142 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
             <StageForm form={stageForm} set={setStageForm} />
           ) : (
             <>
-              <DayForm form={dayForm} set={setDayForm} stages={stages.data ?? []} />
+              <Tabs
+                value={dayEditorView}
+                onValueChange={(value) => {
+                  const next = value as "form" | "json";
+                  setDayEditorView(next);
+                  if (next === "json") setDayJson(JSON.stringify(dayForm, null, 2));
+                }}
+              >
+                <TabsList className="grid w-full grid-cols-2 bg-[#061426]/80">
+                  <TabsTrigger value="form">
+                    <FileText className="size-4" />
+                    Formulario
+                  </TabsTrigger>
+                  <TabsTrigger value="json">
+                    <Braces className="size-4" />
+                    JSON
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="form" className="space-y-4 pt-3">
+                  <DayForm form={dayForm} set={setDayForm} stages={stages.data ?? []} />
+                </TabsContent>
+                <TabsContent value="json" className="space-y-3 pt-3">
+                  <div className="rounded-xl border border-[#d6a642]/20 bg-[#d6a642]/5 p-3 text-xs leading-relaxed text-white/65">
+                    <b className="mb-1 block text-[#e2b85e]">Editor estructurado del día</b>
+                    Los cambios se sincronizan cuando el JSON es válido. Para dar formato dentro de
+                    un texto use <code>## Título</code>, <code>### Subtítulo</code>,{" "}
+                    <code>**negrita**</code>, <code>*cursiva*</code>, <code>&gt; cita</code> o{" "}
+                    <code>- lista</code>.
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        try {
+                          const formatted = JSON.stringify(JSON.parse(dayJson), null, 2);
+                          setDayJson(formatted);
+                          const parsed = normalizeDayJson(
+                            JSON.parse(formatted),
+                            (stages.data ?? []).map((stage) => stage.id),
+                          );
+                          setDayForm(parsed);
+                          setDayJsonError(null);
+                          toast.success("JSON formateado y validado.");
+                        } catch (error) {
+                          setDayJsonError(readJsonError(error));
+                        }
+                      }}
+                    >
+                      <WandSparkles /> Formatear
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(dayJson);
+                        toast.success("JSON copiado.");
+                      }}
+                    >
+                      <Clipboard /> Copiar
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setDayJson(JSON.stringify(dayForm, null, 2));
+                        setDayJsonError(null);
+                        toast.success("JSON restaurado desde el formulario.");
+                      }}
+                    >
+                      <RotateCcw /> Restaurar
+                    </Button>
+                    <span className="ml-auto text-xs text-white/45">
+                      {dayJson.split("\n").length} líneas · {dayJson.length.toLocaleString("es-CO")}{" "}
+                      caracteres
+                    </span>
+                  </div>
+                  <Textarea
+                    className={`min-h-[620px] font-mono text-xs leading-relaxed ${
+                      dayJsonError
+                        ? "border-red-400/60 focus-visible:ring-red-400"
+                        : "border-emerald-400/25"
+                    }`}
+                    spellCheck={false}
+                    value={dayJson}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setDayJson(value);
+                      try {
+                        const parsed = normalizeDayJson(
+                          JSON.parse(value),
+                          (stages.data ?? []).map((stage) => stage.id),
+                        );
+                        setDayForm(parsed);
+                        setDayJsonError(null);
+                      } catch (error) {
+                        setDayJsonError(readJsonError(error));
+                      }
+                    }}
+                  />
+                  {dayJsonError ? (
+                    <p role="alert" className="text-sm text-red-300">
+                      {dayJsonError}
+                    </p>
+                  ) : (
+                    <p className="flex items-center gap-1.5 text-xs text-emerald-300">
+                      <CheckCircle2 className="size-4" /> JSON válido y sincronizado con el
+                      formulario.
+                    </p>
+                  )}
+                  <details className="rounded-xl border border-white/10 bg-[#061426]/45 p-3 text-xs text-white/60">
+                    <summary className="cursor-pointer font-semibold text-[#e2b85e]">
+                      Ver reglas de los campos JSON
+                    </summary>
+                    <ul className="mt-3 list-disc space-y-1.5 pl-5">
+                      <li>
+                        <code>day_number</code>: número entero entre 1 y 33.
+                      </li>
+                      <li>
+                        <code>estimated_minutes</code>: número entero entre 1 y 240.
+                      </li>
+                      <li>
+                        <code>status</code>: solamente <code>draft</code> o <code>published</code>.
+                      </li>
+                      <li>
+                        <code>stage_id</code>: debe corresponder a una etapa existente o ser{" "}
+                        <code>none</code>.
+                      </li>
+                      <li>Los nombres de los campos deben conservarse exactamente.</li>
+                    </ul>
+                  </details>
+                </TabsContent>
+              </Tabs>
               {selected ? (
                 <DayRelatedContentManager dayId={selected} consecrationId={consecrationId} />
               ) : (
@@ -293,7 +454,10 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
             ) : (
               <span />
             )}
-            <Button disabled={save.isPending} className="bg-[#c99a3d] text-[#061426]">
+            <Button
+              disabled={save.isPending || Boolean(dayJsonError)}
+              className="bg-[#c99a3d] text-[#061426]"
+            >
               <Save />
               Guardar
             </Button>
@@ -423,69 +587,69 @@ function DayForm({
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Objetivo">
-          <Textarea
+          <RichTextEditor
             rows={3}
             value={form.objective}
-            onChange={(e) => set({ ...form, objective: e.target.value })}
+            onChange={(value) => set({ ...form, objective: value })}
           />
         </Field>
         <Field label="Lema">
           <Textarea
             rows={3}
             value={form.motto}
-            onChange={(e) => set({ ...form, motto: e.target.value })}
+            onChange={(event) => set({ ...form, motto: event.target.value })}
           />
         </Field>
       </div>
       <Field label="Introducción">
-        <Textarea
+        <RichTextEditor
           rows={4}
           value={form.introduction}
-          onChange={(e) => set({ ...form, introduction: e.target.value })}
+          onChange={(value) => set({ ...form, introduction: value })}
         />
       </Field>
       <Field label="Enseñanza">
-        <Textarea
+        <RichTextEditor
           rows={8}
           value={form.teaching}
-          onChange={(e) => set({ ...form, teaching: e.target.value })}
+          onChange={(value) => set({ ...form, teaching: value })}
         />
       </Field>
       <Field label="Enseñanza de la Iglesia">
-        <Textarea
+        <RichTextEditor
           rows={5}
           value={form.church_teaching}
-          onChange={(e) => set({ ...form, church_teaching: e.target.value })}
+          onChange={(value) => set({ ...form, church_teaching: value })}
         />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Meditación">
-          <Textarea
+          <RichTextEditor
             rows={5}
             value={form.meditation}
-            onChange={(e) => set({ ...form, meditation: e.target.value })}
+            onChange={(value) => set({ ...form, meditation: value })}
           />
         </Field>
         <Field label="Propósito">
-          <Textarea
+          <RichTextEditor
             rows={5}
             value={form.purpose}
-            onChange={(e) => set({ ...form, purpose: e.target.value })}
+            onChange={(value) => set({ ...form, purpose: value })}
           />
         </Field>
       </div>
       <Field label="Oración">
-        <Textarea
+        <RichTextEditor
           rows={5}
           value={form.prayer}
-          onChange={(e) => set({ ...form, prayer: e.target.value })}
+          onChange={(value) => set({ ...form, prayer: value })}
         />
       </Field>
       <Field label="Consagración progresiva">
-        <Textarea
+        <RichTextEditor
           rows={5}
           value={form.progressive_consecration}
-          onChange={(e) => set({ ...form, progressive_consecration: e.target.value })}
+          onChange={(value) => set({ ...form, progressive_consecration: value })}
         />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -515,4 +679,66 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       {children}
     </div>
   );
+}
+
+const DAY_JSON_KEYS = Object.keys(emptyDay) as Array<keyof typeof emptyDay>;
+
+function normalizeDayJson(value: unknown, allowedStageIds: string[]): typeof emptyDay {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("El contenido debe ser un objeto JSON.");
+  }
+  const source = value as Record<string, unknown>;
+  const unknownKeys = Object.keys(source).filter(
+    (key) => !DAY_JSON_KEYS.includes(key as keyof typeof emptyDay),
+  );
+  if (unknownKeys.length) {
+    throw new Error(`Campo desconocido: ${unknownKeys.join(", ")}. Revisa su escritura.`);
+  }
+  const missingKeys = DAY_JSON_KEYS.filter((key) => !(key in source));
+  if (missingKeys.length) {
+    throw new Error(`Faltan campos requeridos: ${missingKeys.join(", ")}.`);
+  }
+  const text = (key: keyof typeof emptyDay) => {
+    const current = source[key];
+    if (typeof current !== "string") throw new Error(`El campo ${key} debe ser texto.`);
+    return current;
+  };
+  const integer = (key: keyof typeof emptyDay, min: number, max: number) => {
+    const current = source[key];
+    if (!Number.isInteger(current) || Number(current) < min || Number(current) > max) {
+      throw new Error(`El campo ${key} debe ser un número entero entre ${min} y ${max}.`);
+    }
+    return Number(current);
+  };
+  const status = text("status");
+  if (status !== "draft" && status !== "published") {
+    throw new Error('El campo status debe ser "draft" o "published".');
+  }
+  const stageId = text("stage_id");
+  if (stageId !== "none" && !allowedStageIds.includes(stageId)) {
+    throw new Error('El campo stage_id no corresponde a una etapa existente; use "none".');
+  }
+  if (!text("title").trim()) throw new Error("El campo title no puede estar vacío.");
+  return {
+    stage_id: stageId,
+    day_number: integer("day_number", 1, 33),
+    title: text("title"),
+    subtitle: text("subtitle"),
+    objective: text("objective"),
+    motto: text("motto"),
+    hero_image: text("hero_image"),
+    introduction: text("introduction"),
+    teaching: text("teaching"),
+    church_teaching: text("church_teaching"),
+    meditation: text("meditation"),
+    purpose: text("purpose"),
+    prayer: text("prayer"),
+    progressive_consecration: text("progressive_consecration"),
+    estimated_minutes: integer("estimated_minutes", 1, 240),
+    status,
+  };
+}
+
+function readJsonError(error: unknown) {
+  return error instanceof Error ? error.message : "El JSON no es válido.";
 }

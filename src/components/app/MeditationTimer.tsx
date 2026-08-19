@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { SacredText } from "@/components/app/SacredText";
 
 const OPTIONS = [1, 3, 5];
 
@@ -21,7 +22,7 @@ export function MeditationCard({ text }: { text?: string | null }) {
   return (
     <div className="surface-sacred overflow-hidden rounded-2xl">
       <div className="relative p-5" style={{ background: "var(--gradient-night)" }}>
-        {text && <p className="whitespace-pre-line text-[15px] leading-relaxed">{text}</p>}
+        {text && <SacredText children={text} />}
 
         <div className="mt-5 flex flex-col items-center">
           <div className="relative flex size-32 items-center justify-center rounded-full border border-primary/40">
