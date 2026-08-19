@@ -197,11 +197,11 @@ function AdminPage() {
         <div className="w-full p-4 sm:p-6 lg:p-7">
           <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
-              <p className="text-xs uppercase tracking-[.2em] text-[#c8a35a]">
+              <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#8a6200]">
                 Centro de contenidos
               </p>
               <h1 className="font-display text-3xl font-semibold">{titles[section]}</h1>
-              <p className="mt-1 text-sm text-[#9cb0c7]">
+              <p className="mt-1 text-sm text-[#52657a]">
                 Gestiona todas las consagraciones de la plataforma.
               </p>
             </div>
@@ -378,22 +378,22 @@ function Sidebar({
             <ShieldCheck />
           </span>
           <div>
-            <p className="text-xs uppercase tracking-wider text-[#d9ac4c]">Consagración</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#f3c756]">Consagración</p>
             <p className="font-display text-xl">33 días</p>
-            <p className="text-[10px] text-[#9cb0c7]">ADMINISTRADOR</p>
+            <p className="text-[10px] text-[#c5d0db]">ADMINISTRADOR</p>
           </div>
           <button className="ml-auto lg:hidden" onClick={close}>
             <X />
           </button>
         </div>
         <nav className="flex-1 p-3">
-          <p className="mb-2 px-3 text-[10px] uppercase tracking-widest text-[#7890a6]">General</p>
+          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-[#aebbc8]">General</p>
           {links.slice(0, 2).map(Link)}
-          <p className="mb-2 mt-6 px-3 text-[10px] uppercase tracking-widest text-[#7890a6]">
+          <p className="mb-2 mt-6 px-3 text-[10px] font-semibold uppercase tracking-widest text-[#aebbc8]">
             Contenido
           </p>
           {links.slice(2, 6).map(Link)}
-          <p className="mb-2 mt-6 px-3 text-[10px] uppercase tracking-widest text-[#7890a6]">
+          <p className="mb-2 mt-6 px-3 text-[10px] font-semibold uppercase tracking-widest text-[#aebbc8]">
             Sistema
           </p>
           {links.slice(6).map(Link)}
@@ -478,9 +478,9 @@ function Dashboard({
                 <Icon />
               </span>
               <div>
-                <p className="text-xs text-[#b5c3d1]">{label}</p>
+                <p className="text-xs font-medium text-[#475467]">{label}</p>
                 <p className="text-2xl font-semibold">{value}</p>
-                <p className="text-xs text-[#8fa3b8]">{sub}</p>
+                <p className="text-xs text-[#667085]">{sub}</p>
               </div>
             </div>
           </Panel>
@@ -490,7 +490,7 @@ function Dashboard({
         <Panel
           title="Consagraciones"
           action={
-            <button onClick={() => go("consecrations")} className="text-xs text-[#e0ad45]">
+            <button onClick={() => go("consecrations")} className="text-xs font-semibold text-[#8a6200]">
               Ver todas
             </button>
           }
@@ -505,7 +505,7 @@ function Dashboard({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{c.title}</p>
-                <p className="text-xs text-[#8fa3b8]">
+                <p className="text-xs text-[#667085]">
                   {c.duration_days} días ·{" "}
                   {data.stages.filter((s) => s.consecration_id === c.id).length} etapas
                 </p>
@@ -517,7 +517,7 @@ function Dashboard({
         <Panel
           title={`Etapas${selected ? ` · ${selected.title}` : ""}`}
           action={
-            <button onClick={() => go("stages")} className="text-xs text-[#e0ad45]">
+            <button onClick={() => go("stages")} className="text-xs font-semibold text-[#8a6200]">
               Ver etapas
             </button>
           }
@@ -532,7 +532,7 @@ function Dashboard({
               </b>
               <div className="flex-1">
                 <p className="text-sm">{s.title}</p>
-                <p className="text-xs text-[#8fa3b8]">
+                <p className="text-xs text-[#667085]">
                   Días {s.start_day}–{s.end_day}
                 </p>
               </div>
@@ -590,8 +590,8 @@ function Consecrations({
               <h2 className="flex-1 font-display text-xl">{c.title}</h2>
               <Status value={c.status} />
             </div>
-            <p className="mt-2 min-h-10 text-sm text-[#9cb0c7]">{c.subtitle || "Sin subtítulo"}</p>
-            <p className="mt-4 border-t border-white/10 pt-3 text-xs text-[#c3cfda]">
+            <p className="mt-2 min-h-10 text-sm text-[#52657a]">{c.subtitle || "Sin subtítulo"}</p>
+            <p className="mt-4 border-t border-slate-200 pt-3 text-xs text-[#667085]">
               {c.duration_days} días · {c.slug}
             </p>
           </div>
@@ -599,7 +599,7 @@ function Consecrations({
       ))}
       <button
         onClick={add}
-        className="grid min-h-72 place-items-center rounded-2xl border border-dashed border-[#c99a3d]/50 text-[#d8ad50]"
+        className="grid min-h-72 place-items-center rounded-2xl border border-dashed border-[#b7791f]/60 bg-white text-[#8a6200] shadow-[0_18px_46px_rgba(15,23,42,.05)] transition hover:border-[#8a6200] hover:bg-[#fffbeb]"
       >
         <span className="flex flex-col items-center gap-3">
           <Plus className="size-10" />
@@ -623,9 +623,9 @@ function Stages({ items, days }: { items: Stage[]; days: Day[] }) {
             </b>
             <div>
               <p>{s.title}</p>
-              <p className="text-sm text-[#8fa3b8]">{s.motto || "Sin lema"}</p>
+              <p className="text-sm text-[#667085]">{s.motto || "Sin lema"}</p>
             </div>
-            <span className="text-sm text-[#d8ad50]">
+            <span className="text-sm font-medium text-[#8a6200]">
               Días {s.start_day}–{s.end_day} · {days.filter((d) => d.stage_id === s.id).length}{" "}
               temas
             </span>
@@ -645,7 +645,7 @@ function Days({ items, stages }: { items: Day[]; stages: Stage[] }) {
       title="Días y enseñanzas"
       action={
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 size-4 text-[#8fa3b8]" />
+          <Search className="absolute left-3 top-2.5 size-4 text-[#52657a]" />
           <Input
             className="h-9 w-56 bg-white/[.04] pl-9"
             placeholder="Buscar"
@@ -657,7 +657,7 @@ function Days({ items, stages }: { items: Day[]; stages: Stage[] }) {
     >
       <div className="overflow-x-auto">
         <table className="w-full min-w-[650px] text-sm">
-          <thead className="text-left text-xs uppercase text-[#8398ad]">
+          <thead className="text-left text-xs uppercase text-[#52657a]">
             <tr>
               <th className="py-3">Día</th>
               <th>Título</th>
@@ -670,9 +670,9 @@ function Days({ items, stages }: { items: Day[]; stages: Stage[] }) {
               .filter((d) => d.title.toLowerCase().includes(q.toLowerCase()))
               .map((d) => (
                 <tr key={d.id}>
-                  <td className="py-3 text-[#dcb052]">{d.day_number}</td>
+                  <td className="py-3 font-semibold text-[#8a6200]">{d.day_number}</td>
                   <td>{d.title}</td>
-                  <td className="text-[#9cb0c7]">
+                  <td className="text-[#667085]">
                     {stages.find((s) => s.id === d.stage_id)?.title || "Sin etapa"}
                   </td>
                   <td>
@@ -812,7 +812,7 @@ function ContentManager({ kind, consecrationId }: { kind: ContentKind; consecrat
               className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left ${selected === i.id ? "border-[#d6a642] bg-[#d6a642]/10" : "border-white/10"}`}
             >
               <span className="flex-1 truncate text-sm">{i.title}</span>
-              <small className="text-[#8fa3b8]">#{i.sort_order}</small>
+              <small className="text-[#667085]">#{i.sort_order}</small>
               <ChevronRight className="size-4" />
             </button>
           ))}
@@ -976,7 +976,7 @@ function Panel({
 function Status({ value }: { value: string }) {
   return (
     <span
-      className={`rounded-md px-2 py-1 text-[10px] ${value === "published" ? "bg-emerald-500/15 text-emerald-300" : value === "draft" ? "bg-amber-500/15 text-amber-300" : "bg-slate-500/20 text-slate-300"}`}
+      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${value === "published" ? "bg-emerald-100 text-emerald-800" : value === "draft" ? "bg-amber-100 text-amber-900" : "bg-slate-200 text-slate-700"}`}
     >
       {value === "published" ? "Activa" : value === "draft" ? "Borrador" : "Inactiva"}
     </span>

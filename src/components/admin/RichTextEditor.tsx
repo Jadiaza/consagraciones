@@ -97,7 +97,7 @@ export function RichTextEditor({
           type="button"
           size="sm"
           variant="ghost"
-          className={cn("ml-auto h-8 text-xs", preview && "text-[#e2b85e]")}
+          className={cn("ml-auto h-8 text-xs", preview && "text-[#8a6200]")}
           onClick={() => setPreview((current) => !current)}
         >
           <Eye className="size-4" />

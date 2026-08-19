@@ -315,7 +315,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                 </TabsContent>
                 <TabsContent value="json" className="space-y-3 pt-3">
                   <div className="rounded-xl border border-[#d4af37]/25 bg-[#fef3c7]/55 p-3 text-xs leading-relaxed text-slate-600">
-                    <b className="mb-1 block text-[#e2b85e]">Editor estructurado del día</b>
+                    <b className="mb-1 block text-[#8a6200]">Editor estructurado del día</b>
                     Los cambios se sincronizan cuando el JSON es válido. Para dar formato dentro de
                     un texto use <code>## Título</code>, <code>### Subtítulo</code>,{" "}
                     <code>**negrita**</code>, <code>*cursiva*</code>, <code>&gt; cita</code> o{" "}
@@ -396,17 +396,17 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                     }}
                   />
                   {dayJsonError ? (
-                    <p role="alert" className="text-sm text-red-300">
+                    <p role="alert" className="text-sm font-medium text-red-700">
                       {dayJsonError}
                     </p>
                   ) : (
-                    <p className="flex items-center gap-1.5 text-xs text-emerald-300">
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
                       <CheckCircle2 className="size-4" /> JSON válido y sincronizado con el
                       formulario.
                     </p>
                   )}
                   <details className="rounded-xl border border-slate-200 bg-[#f8fafc] p-3 text-xs text-slate-600">
-                    <summary className="cursor-pointer font-semibold text-[#e2b85e]">
+                    <summary className="cursor-pointer font-semibold text-[#8a6200]">
                       Ver reglas de los campos JSON
                     </summary>
                     <ul className="mt-3 list-disc space-y-1.5 pl-5">

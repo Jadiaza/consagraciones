@@ -183,7 +183,7 @@ export function DayRelatedContentManager({
   return (
     <div className="space-y-4 border-t border-white/10 pt-6">
       <div>
-        <h3 className="font-display text-xl text-[#e2b85e]">Contenido complementario</h3>
+        <h3 className="font-display text-xl text-[#8a6200]">Contenido complementario</h3>
         <p className="text-sm text-white/60">
           Estos registros alimentan directamente la pantalla pública de este día.
         </p>
@@ -308,7 +308,7 @@ function RelatedEditor({
             <Plus /> Nuevo
           </Button>
           {query.isLoading && <p className="text-sm text-white/55">Cargando…</p>}
-          {query.error && <p className="text-sm text-red-300">{readMessage(query.error)}</p>}
+          {query.error && <p className="text-sm font-medium text-red-700">{readMessage(query.error)}</p>}
           {query.data?.map((row) => (
             <button
               key={String(row.id)}
