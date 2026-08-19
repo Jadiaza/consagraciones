@@ -80,14 +80,14 @@ export function RichTextEditor({
 
   return (
     <div className="overflow-hidden rounded-lg border border-input">
-      <div className="flex flex-wrap items-center gap-1 border-b border-white/8 bg-[#101f2d]/65 p-2">
+      <div className="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-[#f8fafc] p-2">
         {tools.map(({ format, label, icon: Icon }) => (
           <button
             key={format}
             type="button"
             title={label}
             aria-label={label}
-            className="inline-flex size-8 items-center justify-center rounded-md text-white/65 transition hover:bg-white/[.06] hover:text-[#d9b86f]"
+            className="inline-flex size-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-[#fef3c7] hover:text-[#8a6200]"
             onClick={() => applyFormat(format)}
           >
             <Icon className="size-4" aria-hidden />
@@ -105,7 +105,7 @@ export function RichTextEditor({
         </Button>
       </div>
       {preview ? (
-        <div className="min-h-32 bg-[#101f2d] p-4 text-[#eef2f5]">
+        <div className="min-h-32 bg-white p-4 text-[#172536]">
           {value.trim() ? (
             <SacredText children={value} />
           ) : (

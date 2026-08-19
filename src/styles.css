@@ -182,17 +182,20 @@
 
 /* Administrador: paleta sobria, con menos saturación y mejor separación visual. */
 .admin-shell {
-  --admin-panel: #152738;
+  --admin-panel: #ffffff;
   --admin-field: #ffffff;
-  --admin-border: rgb(203 213 225 / 12%);
-  --admin-border-strong: rgb(203 213 225 / 20%);
-  --admin-gold: #c99c45;
+  --admin-border: rgb(15 23 42 / 9%);
+  --admin-border-strong: rgb(15 23 42 / 14%);
+  --admin-gold: #d4af37;
+  --admin-ink: #111827;
+  --admin-muted: #667085;
 }
 
 .admin-shell .surface-sacred {
   border-color: var(--admin-border);
   background: var(--admin-panel);
-  box-shadow: 0 10px 26px rgb(0 0 0 / 12%);
+  color: var(--admin-ink);
+  box-shadow: 0 18px 46px rgb(15 23 42 / 8%);
 }
 
 .admin-shell input,
@@ -216,10 +219,32 @@
   border-color: rgb(201 156 69 / 55%);
 }
 
+.admin-shell main [class*="text-white/"] {
+  color: var(--admin-muted);
+}
+
+.admin-shell main [class*="border-white/"] {
+  border-color: var(--admin-border);
+}
+
+.admin-shell main label,
+.admin-shell main h1,
+.admin-shell main h2 {
+  color: var(--admin-ink);
+}
+
+.admin-shell main code {
+  color: #8a6200;
+}
+
+.admin-shell main table {
+  color: #27364a;
+}
+
 @media (hover: hover) {
   .admin-shell .surface-sacred:hover {
-    border-color: rgb(203 213 225 / 20%);
-    box-shadow: 0 12px 28px rgb(0 0 0 / 15%);
+    border-color: rgb(212 175 55 / 28%);
+    box-shadow: 0 20px 48px rgb(15 23 42 / 10%);
   }
 }
 

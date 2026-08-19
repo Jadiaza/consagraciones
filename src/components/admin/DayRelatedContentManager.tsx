@@ -296,9 +296,9 @@ function RelatedEditor({
   return (
     <details
       defaultOpen={defaultOpen}
-      className="rounded-xl border border-white/10 bg-[#071d34]/55"
+      className="rounded-xl border border-slate-200 bg-[#f8fafc]"
     >
-      <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-[#f5f1e8]">
+      <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-[#111827]">
         {config.title}{" "}
         <span className="ml-2 text-xs text-white/45">({query.data?.length ?? 0})</span>
       </summary>
@@ -314,7 +314,7 @@ function RelatedEditor({
               key={String(row.id)}
               type="button"
               onClick={() => edit(row)}
-              className={`flex w-full items-center gap-2 rounded-lg border p-3 text-left text-sm ${selectedId === row.id ? "border-[#d6a642] bg-[#d6a642]/10" : "border-white/10"}`}
+              className={`flex w-full items-center gap-2 rounded-lg border p-3 text-left text-sm ${selectedId === row.id ? "border-[#d4af37]/60 bg-[#fef3c7]/55" : "border-slate-200 bg-white"}`}
             >
               <span className="min-w-0 flex-1 truncate">{config.label(row)}</span>
               <Pencil className="size-4 shrink-0" />
@@ -341,7 +341,7 @@ function RelatedEditor({
             <Button
               type="button"
               disabled={busy}
-              className="bg-[#c99a3d] text-[#061426]"
+              className="bg-gradient-to-r from-[#f3c756] to-[#d4af37] text-[#07182a]"
               onClick={save}
             >
               <Save /> Guardar
