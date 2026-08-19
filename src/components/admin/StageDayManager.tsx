@@ -251,9 +251,9 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
               onClick={() =>
                 mode === "stages" ? chooseStage(item as never) : chooseDay(item as never)
               }
-              className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left ${selected === item.id ? "border-[#d6a642] bg-[#d6a642]/10" : "border-white/10"}`}
+              className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${selected === item.id ? "border-[#c8a35a]/65 bg-[#c8a35a]/8" : "border-white/8 bg-white/[.015] hover:bg-white/[.035]"}`}
             >
-              <b className="grid size-9 place-items-center rounded-full bg-[#c99a3d] text-[#061426]">
+              <b className="grid size-9 place-items-center rounded-full bg-[#c99c45] text-[#14202b]">
                 {mode === "stages"
                   ? "stage_number" in item
                     ? item.stage_number
@@ -300,7 +300,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                   if (next === "json") setDayJson(JSON.stringify(dayForm, null, 2));
                 }}
               >
-                <TabsList className="grid w-full grid-cols-2 bg-[#061426]/80">
+                <TabsList className="grid w-full grid-cols-2 border border-white/8 bg-[#0f1d2a]">
                   <TabsTrigger value="form">
                     <FileText className="size-4" />
                     Formulario
@@ -314,7 +314,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                   <DayForm form={dayForm} set={setDayForm} stages={stages.data ?? []} />
                 </TabsContent>
                 <TabsContent value="json" className="space-y-3 pt-3">
-                  <div className="rounded-xl border border-[#d6a642]/20 bg-[#d6a642]/5 p-3 text-xs leading-relaxed text-white/65">
+                  <div className="rounded-xl border border-[#c8a35a]/18 bg-[#c8a35a]/[.04] p-3 text-xs leading-relaxed text-white/65">
                     <b className="mb-1 block text-[#e2b85e]">Editor estructurado del día</b>
                     Los cambios se sincronizan cuando el JSON es válido. Para dar formato dentro de
                     un texto use <code>## Título</code>, <code>### Subtítulo</code>,{" "}
@@ -405,7 +405,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                       formulario.
                     </p>
                   )}
-                  <details className="rounded-xl border border-white/10 bg-[#061426]/45 p-3 text-xs text-white/60">
+                  <details className="rounded-xl border border-white/8 bg-[#101f2d]/65 p-3 text-xs text-white/60">
                     <summary className="cursor-pointer font-semibold text-[#e2b85e]">
                       Ver reglas de los campos JSON
                     </summary>
@@ -456,7 +456,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
             )}
             <Button
               disabled={save.isPending || Boolean(dayJsonError)}
-              className="bg-[#c99a3d] text-[#061426]"
+              className="bg-[#c99c45] text-[#14202b] shadow-none hover:bg-[#d5aa55]"
             >
               <Save />
               Guardar

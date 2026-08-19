@@ -180,6 +180,49 @@
   }
 }
 
+/* Administrador: paleta sobria, con menos saturación y mejor separación visual. */
+.admin-shell {
+  --admin-panel: #152738;
+  --admin-field: #ffffff;
+  --admin-border: rgb(203 213 225 / 12%);
+  --admin-border-strong: rgb(203 213 225 / 20%);
+  --admin-gold: #c99c45;
+}
+
+.admin-shell .surface-sacred {
+  border-color: var(--admin-border);
+  background: var(--admin-panel);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 12%);
+}
+
+.admin-shell input,
+.admin-shell textarea,
+.admin-shell button[role="combobox"] {
+  border-color: var(--admin-border-strong);
+  background-color: var(--admin-field);
+  color: #172536;
+  caret-color: #172536;
+}
+
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: #718096;
+  opacity: 1;
+}
+
+.admin-shell input:focus,
+.admin-shell textarea:focus,
+.admin-shell button[role="combobox"]:focus {
+  border-color: rgb(201 156 69 / 55%);
+}
+
+@media (hover: hover) {
+  .admin-shell .surface-sacred:hover {
+    border-color: rgb(203 213 225 / 20%);
+    box-shadow: 0 12px 28px rgb(0 0 0 / 15%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

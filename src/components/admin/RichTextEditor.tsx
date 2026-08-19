@@ -80,14 +80,14 @@ export function RichTextEditor({
 
   return (
     <div className="overflow-hidden rounded-lg border border-input">
-      <div className="flex flex-wrap items-center gap-1 border-b border-white/10 bg-black/10 p-2">
+      <div className="flex flex-wrap items-center gap-1 border-b border-white/8 bg-[#101f2d]/65 p-2">
         {tools.map(({ format, label, icon: Icon }) => (
           <button
             key={format}
             type="button"
             title={label}
             aria-label={label}
-            className="inline-flex size-8 items-center justify-center rounded-md text-white/65 transition hover:bg-[#d6a642]/15 hover:text-[#e2b85e]"
+            className="inline-flex size-8 items-center justify-center rounded-md text-white/65 transition hover:bg-white/[.06] hover:text-[#d9b86f]"
             onClick={() => applyFormat(format)}
           >
             <Icon className="size-4" aria-hidden />
@@ -105,7 +105,7 @@ export function RichTextEditor({
         </Button>
       </div>
       {preview ? (
-        <div className="min-h-32 bg-[#07182b] p-4 text-[#f5f1e8]">
+        <div className="min-h-32 bg-[#101f2d] p-4 text-[#eef2f5]">
           {value.trim() ? (
             <SacredText children={value} />
           ) : (
@@ -115,7 +115,7 @@ export function RichTextEditor({
       ) : (
         <Textarea
           ref={textareaRef}
-          className="rounded-none border-0 focus-visible:ring-0"
+          className="rounded-none border-0 bg-white text-[#172536] placeholder:text-slate-500 focus-visible:ring-0"
           rows={rows}
           value={value}
           placeholder={placeholder}

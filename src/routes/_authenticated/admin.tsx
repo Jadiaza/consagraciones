@@ -175,8 +175,8 @@ function AdminPage() {
     onError: (e) => toast.error(e.message),
   });
   return (
-    <div className="min-h-dvh bg-[#041426] text-[#f5f1e8]">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_75%_0%,rgba(31,89,137,.24),transparent_42%)]" />
+    <div className="admin-shell min-h-dvh bg-[#0c1824] text-[#eef2f5]">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_75%_0%,rgba(105,132,154,.10),transparent_42%)]" />
       <Sidebar
         open={menu}
         section={section}
@@ -187,7 +187,7 @@ function AdminPage() {
         }}
       />
       <main className="relative min-h-dvh lg:pl-[244px]">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-white/10 bg-[#06182b]/90 px-4 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-white/8 bg-[#101e2b]/95 px-4 backdrop-blur lg:hidden">
           <button onClick={() => setMenu(true)}>
             <Menu />
           </button>
@@ -197,7 +197,7 @@ function AdminPage() {
         <div className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">
           <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
-              <p className="text-xs uppercase tracking-[.2em] text-[#d6a642]">
+              <p className="text-xs uppercase tracking-[.2em] text-[#c8a35a]">
                 Centro de contenidos
               </p>
               <h1 className="font-display text-3xl font-semibold">{titles[section]}</h1>
@@ -220,7 +220,7 @@ function AdminPage() {
               </Select>
               <Button
                 onClick={() => setModal(true)}
-                className="bg-gradient-to-r from-[#ae7926] to-[#d8ac52] text-[#071525]"
+                className="bg-[#c99c45] text-[#14202b] shadow-none hover:bg-[#d5aa55]"
               >
                 <Plus />
                 Nueva consagración
@@ -371,7 +371,7 @@ function Sidebar({
         className={`fixed inset-0 z-30 bg-black/70 lg:hidden ${open ? "block" : "hidden"}`}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[244px] flex-col border-r border-white/10 bg-[#041a2f] transition-transform lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-[244px] flex-col border-r border-white/8 bg-[#101e2b] transition-transform lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex h-24 items-center gap-3 border-b border-white/10 px-5">
           <span className="grid size-12 place-items-center rounded-xl border border-[#c99a3d]/40 bg-[#c99a3d]/10">
@@ -413,7 +413,7 @@ function Sidebar({
       <button
         key={key}
         onClick={() => select(key)}
-        className={`mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${section === key ? "bg-gradient-to-r from-[#ae7926] to-[#c99a3d] text-[#071525]" : "text-[#d8e1ea] hover:bg-white/[.06]"}`}
+        className={`mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${section === key ? "bg-[#c99c45] text-[#14202b]" : "text-[#d8e1ea] hover:bg-white/[.05]"}`}
       >
         <Icon className="size-[18px]" />
         {label}
@@ -960,7 +960,7 @@ function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="surface-sacred rounded-2xl border border-white/10 bg-[#0a2742]/80">
+    <section className="surface-sacred rounded-2xl border border-white/8 bg-[#152738]/90">
       {!bare && (title || action) && (
         <header className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 px-4">
           <h2 className="font-semibold">{title}</h2>
@@ -991,7 +991,7 @@ function Modal({
 }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-xl rounded-2xl border border-[#c99a3d]/30 bg-[#09223a]">
+      <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#152738] shadow-2xl">
         <header className="flex justify-between border-b border-white/10 p-5">
           <h2 className="font-display text-xl">{title}</h2>
           <button onClick={close}>
