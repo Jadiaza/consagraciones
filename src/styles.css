@@ -865,6 +865,10 @@ html[data-app-theme="sepia"] {
     overflow: hidden;
   }
 
+  .day-section-panel:not([data-active="true"]) {
+    display: none;
+  }
+
   .day-section-panel.slide-forward {
     animation: day-panel-forward 260ms ease-out both;
   }
@@ -900,6 +904,23 @@ html[data-app-theme="sepia"] {
       flex: 1 1 0;
       justify-content: center;
       min-width: 0;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .day-section-panel,
+    .day-section-panel:not([data-active="true"]) {
+      animation: none;
+      display: block;
+      min-height: 0;
+      overflow: visible;
+      scroll-margin-top: 4.5rem;
+    }
+
+    .day-section-panel + .day-section-panel {
+      border-top: 1px solid var(--reading-border);
+      margin-top: 2.25rem;
+      padding-top: 0.25rem;
     }
   }
 

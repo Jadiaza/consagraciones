@@ -22,7 +22,6 @@ export function DayReadingNavigation({
   const goTo = (id: string) => {
     setMobileOpen(false);
     onSelect(id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const buttons = (mobile = false) =>
