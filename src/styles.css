@@ -314,10 +314,10 @@
   }
 
   .day-reader-shell {
-    max-width: 64rem;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 0;
+    max-width: 64rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
   }
 
   .reading-theme-light {
@@ -425,19 +425,54 @@
   }
 
   .reading-surface .surface-sacred {
-    background: var(--reading-card);
-    border-color: var(--reading-border);
-    color: var(--reading-fg);
+    background: var(--reading-card) !important;
+    border-color: var(--reading-border) !important;
+    color: var(--reading-fg) !important;
+    box-shadow: 0 10px 28px rgb(0 0 0 / 9%);
+  }
+
+  .reading-surface .surface-sacred .sacred-text,
+  .reading-surface [class*="bg-secondary"] .sacred-text,
+  .reading-surface [class*="bg-secondary"] {
+    color: var(--reading-fg) !important;
+  }
+
+  .reading-surface [class*="bg-secondary"] {
+    background: var(--reading-card) !important;
+    border-color: var(--reading-border) !important;
   }
 
   .reading-surface .text-primary,
   .reading-surface .sacred-heading,
   .reading-surface .sacred-subheading {
-    color: var(--reading-accent);
+    color: var(--reading-accent) !important;
   }
 
   .reading-surface .text-muted-foreground {
-    color: var(--reading-muted);
+    color: var(--reading-muted) !important;
+  }
+
+  .reading-surface button.bg-primary {
+    background: var(--reading-accent) !important;
+    color: var(--reading-bg) !important;
+  }
+
+  .reading-surface button.border-input {
+    background: transparent !important;
+    border-color: var(--reading-border) !important;
+    color: var(--reading-fg) !important;
+  }
+
+  .reading-surface button.border-input:hover {
+    background: var(--reading-card) !important;
+    border-color: var(--reading-accent) !important;
+  }
+
+  .reading-surface textarea {
+    background: color-mix(in srgb, var(--reading-card) 72%, var(--reading-bg)) !important;
+    border-color: var(--reading-border) !important;
+    color: var(--reading-fg) !important;
+    color-scheme: inherit;
   }
 
   .sacred-text {
