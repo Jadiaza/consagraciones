@@ -225,7 +225,7 @@ function DiaPage() {
   return (
     <AppShell
       title={`Día ${n} de 33`}
-      back
+      back={showMobileSummary && !showMobileSections}
       action={
         <button
           type="button"
