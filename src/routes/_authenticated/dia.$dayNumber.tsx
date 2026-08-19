@@ -77,6 +77,8 @@ function DiaPage() {
     }
   };
 
+  const resetPreferences = () => savePreferences(DEFAULT_READING_PREFERENCES);
+
   const record = (progress ?? []).find((p) => p.day_number === n);
   const availableThrough = nextAvailableDay(progress);
 
@@ -174,10 +176,11 @@ function DiaPage() {
           <SlidersHorizontal className="size-4" aria-hidden />
         </button>
       }
+      className="day-reader-shell"
     >
       <div
         className={cn(
-          "reading-surface rounded-[1.4rem] border p-4 shadow-xl sm:p-6",
+          "reading-surface",
           `reading-theme-${preferences.theme}`,
           `reading-font-${preferences.font}`,
           `reading-align-${preferences.align}`,
@@ -193,7 +196,12 @@ function DiaPage() {
         </header>
 
         {showReadingTools && (
-          <ReadingToolbar preferences={preferences} onChange={savePreferences} />
+          <ReadingToolbar
+            preferences={preferences}
+            onChange={savePreferences}
+            onClose={() => setShowReadingTools(false)}
+            onReset={resetPreferences}
+          />
         )}
 
         <DayReadingNavigation sections={navigationSections} />
