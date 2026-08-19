@@ -1,5 +1,5 @@
 import { ChevronDown, List } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -8,39 +8,32 @@ export type DayReadingSection = {
   label: string;
 };
 
-export function DayReadingNavigation({ sections }: { sections: DayReadingSection[] }) {
-  const [active, setActive] = useState(sections[0]?.id ?? "");
+export function DayReadingNavigation({
+  sections,
+  active,
+  onSelect,
+}: {
+  sections: DayReadingSection[];
+  active: string;
+  onSelect: (id: string) => void;
+}) {
   const [mobileOpen, setMobileOpen] = useState(true);
 
-  useEffect(() => {
-    const elements = sections
-      .map((section) => document.getElementById(section.id))
-      .filter((element): element is HTMLElement => Boolean(element));
-    if (!elements.length) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (visible?.target.id) setActive(visible.target.id);
-      },
-      { rootMargin: "-18% 0px -68% 0px", threshold: 0 },
-    );
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, [sections]);
-
   const goTo = (id: string) => {
-    setActive(id);
     setMobileOpen(false);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    onSelect(id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const buttons = (mobile = false) =>
     sections.map((section, index) => (
       <button
         key={section.id}
+        id={mobile ? undefined : `tab-${section.id}`}
         type="button"
+        role="tab"
+        aria-controls={`panel-${section.id}`}
+        aria-selected={active === section.id}
         className={cn(active === section.id && "is-active")}
         aria-current={active === section.id ? "location" : undefined}
         onClick={() => goTo(section.id)}
@@ -53,7 +46,11 @@ export function DayReadingNavigation({ sections }: { sections: DayReadingSection
 
   return (
     <>
-      <nav className="day-reading-nav day-reading-nav--desktop" aria-label="Secciones del día">
+      <nav
+        className="day-reading-nav day-reading-nav--desktop"
+        role="tablist"
+        aria-label="Secciones del día"
+      >
         {buttons()}
       </nav>
       <nav className="day-reading-nav-mobile" aria-label="Secciones del día">

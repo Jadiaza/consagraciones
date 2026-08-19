@@ -852,12 +852,55 @@ html[data-app-theme="sepia"] {
   .day-reading-nav button.is-active {
     background: var(--reading-accent);
     border-color: var(--reading-accent);
-    color: var(--reading-bg);
+    color: #20170b;
   }
 
   .day-reading-nav button.is-active span {
     background: var(--reading-bg);
     color: var(--reading-accent);
+  }
+
+  .day-section-panel {
+    min-height: 24rem;
+    overflow: hidden;
+  }
+
+  .day-section-panel.slide-forward {
+    animation: day-panel-forward 260ms ease-out both;
+  }
+
+  .day-section-panel.slide-backward {
+    animation: day-panel-backward 260ms ease-out both;
+  }
+
+  @keyframes day-panel-forward {
+    from {
+      opacity: 0;
+      transform: translateX(2.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes day-panel-backward {
+    from {
+      opacity: 0;
+      transform: translateX(-2.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @media (min-width: 641px) {
+    .day-reading-nav--desktop button {
+      flex: 1 1 0;
+      justify-content: center;
+      min-width: 0;
+    }
   }
 
   .reading-anchor {
@@ -964,6 +1007,8 @@ html[data-app-theme="sepia"] {
 
     .day-reading-nav-mobile__list > button.is-active {
       border-color: var(--reading-accent);
+      background: color-mix(in srgb, var(--reading-card) 72%, var(--reading-bg));
+      color: var(--reading-fg);
     }
 
     .reading-toolbar__topbar {
