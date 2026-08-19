@@ -29,11 +29,11 @@ import {
   nextAvailableDay,
 } from "@/lib/consecration";
 import { MediaService } from "@/lib/media-service";
+import { applyAppTheme, READING_PREFERENCES_KEY } from "@/lib/app-theme";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dia/$dayNumber")({ component: DiaPage });
 
-const READING_PREFERENCES_KEY = "lvj-consagraciones-reading-preferences";
 const DEFAULT_READING_PREFERENCES: ReadingPreferences = {
   size: 17,
   theme: "dark",
@@ -62,7 +62,11 @@ function DiaPage() {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(READING_PREFERENCES_KEY);
-      if (saved) setPreferences({ ...DEFAULT_READING_PREFERENCES, ...JSON.parse(saved) });
+      if (saved) {
+        const next = { ...DEFAULT_READING_PREFERENCES, ...JSON.parse(saved) };
+        setPreferences(next);
+        applyAppTheme(next.theme);
+      }
     } catch {
       // Keep safe defaults when storage is unavailable or contains invalid data.
     }
@@ -70,6 +74,7 @@ function DiaPage() {
 
   const savePreferences = (next: ReadingPreferences) => {
     setPreferences(next);
+    applyAppTheme(next.theme);
     try {
       window.localStorage.setItem(READING_PREFERENCES_KEY, JSON.stringify(next));
     } catch {

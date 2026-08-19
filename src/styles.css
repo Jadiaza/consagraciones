@@ -99,6 +99,65 @@
     rgb(6 20 38 / 62%) 62%,
     #061426 100%
   );
+  --app-page-background:
+    radial-gradient(circle at 50% -10%, rgb(201 154 61 / 10%), transparent 34rem),
+    linear-gradient(180deg, #061426 0%, #071a30 45%, #04101f 100%);
+  --app-card-background: linear-gradient(180deg, rgb(16 46 79 / 96%), rgb(6 24 43 / 98%));
+  --app-chrome-bg: rgb(4 16 31 / 96%);
+  --app-chrome-fg: #f5f1e8;
+  --app-chrome-muted: #b8c2d1;
+}
+
+html[data-app-theme="light"] {
+  color-scheme: light;
+  --background: #fffdf8;
+  --foreground: #24201a;
+  --card: #ffffff;
+  --card-foreground: #24201a;
+  --popover: #ffffff;
+  --popover-foreground: #24201a;
+  --primary: #966317;
+  --primary-foreground: #fffdf8;
+  --secondary: #f4efe4;
+  --secondary-foreground: #30291f;
+  --muted: #eee8dc;
+  --muted-foreground: #655f55;
+  --accent: #eadfc9;
+  --accent-foreground: #5f3e0b;
+  --border: rgb(159 112 35 / 24%);
+  --input: rgb(95 62 11 / 18%);
+  --ring: #966317;
+  --app-page-background: linear-gradient(180deg, #fffdf8, #f7f2e8);
+  --app-card-background: #ffffff;
+  --app-chrome-bg: rgb(255 253 248 / 96%);
+  --app-chrome-fg: #29231b;
+  --app-chrome-muted: #6e665b;
+}
+
+html[data-app-theme="sepia"] {
+  color-scheme: light;
+  --background: #f4e5c5;
+  --foreground: #382a1c;
+  --card: #eddbb6;
+  --card-foreground: #382a1c;
+  --popover: #f5e9ce;
+  --popover-foreground: #382a1c;
+  --primary: #7b501b;
+  --primary-foreground: #fff8e8;
+  --secondary: #ead5ac;
+  --secondary-foreground: #382a1c;
+  --muted: #e5cda0;
+  --muted-foreground: #715d45;
+  --accent: #ddbf86;
+  --accent-foreground: #4d3214;
+  --border: rgb(112 76 30 / 27%);
+  --input: rgb(77 50 20 / 20%);
+  --ring: #7b501b;
+  --app-page-background: linear-gradient(180deg, #f4e5c5, #e9d2a7);
+  --app-card-background: linear-gradient(180deg, #f0dfbd, #ead5ac);
+  --app-chrome-bg: rgb(239 220 181 / 96%);
+  --app-chrome-fg: #382a1c;
+  --app-chrome-muted: #715d45;
 }
 
 @layer base {
@@ -112,9 +171,7 @@
 
   body {
     min-height: 100dvh;
-    background:
-      radial-gradient(circle at 50% -10%, rgb(201 154 61 / 10%), transparent 34rem),
-      linear-gradient(180deg, #061426 0%, #071a30 45%, #04101f 100%);
+    background: var(--app-page-background);
     background-attachment: fixed;
     color: var(--color-foreground);
   }
@@ -131,8 +188,38 @@
 
 @utility surface-sacred {
   border: 1px solid var(--brand-border);
-  background: linear-gradient(180deg, rgb(16 46 79 / 96%), rgb(6 24 43 / 98%));
+  background: var(--app-card-background);
   box-shadow: 0 8px 28px rgb(0 0 0 / 18%);
+}
+
+.app-shell {
+  background: var(--app-page-background);
+}
+
+.spiritual-header,
+.bottom-navigation {
+  background: var(--app-chrome-bg);
+  border-color: var(--border);
+  color: var(--app-chrome-fg);
+}
+
+.spiritual-header__title,
+.spiritual-header__button {
+  color: var(--app-chrome-fg);
+}
+
+.spiritual-header__button:hover {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+
+.bottom-navigation__link {
+  color: var(--app-chrome-muted);
+}
+
+.bottom-navigation__link:hover,
+.bottom-navigation__link.is-active {
+  color: var(--primary);
 }
 
 @utility text-gradient-gold {
@@ -709,16 +796,16 @@
   }
 
   .day-reading-nav {
-    background: color-mix(in srgb, var(--reading-bg) 92%, transparent);
-    border-block: 1px solid var(--reading-border);
+    background: transparent;
+    border: 0;
     display: flex;
     gap: 0.35rem;
     margin: 0 -0.35rem 1.1rem;
     overflow-x: auto;
     padding: 0.65rem 0.35rem;
-    position: sticky;
+    position: relative;
     scrollbar-width: none;
-    top: 3.75rem;
+    top: auto;
     z-index: 20;
   }
 
