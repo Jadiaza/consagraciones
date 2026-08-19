@@ -38,6 +38,7 @@ import {
 import { MediaService } from "@/lib/media-service";
 import { applyAppTheme, READING_PREFERENCES_KEY } from "@/lib/app-theme";
 import { cn } from "@/lib/utils";
+import "@/styles/day-modal-flow.css";
 
 export const Route = createFileRoute("/_authenticated/dia/$dayNumber")({ component: DiaPage });
 
@@ -266,7 +267,11 @@ function DiaPage() {
           />
         )}
 
-        <section className="day-mobile-summary" aria-label="Resumen del día">
+        <section
+          className="day-mobile-summary"
+          data-visible={showMobileSummary}
+          aria-label="Resumen del día"
+        >
           <p className="day-mobile-summary__badge">
             Día {n} de 33 · {day.estimated_minutes} minutos
           </p>
@@ -367,6 +372,13 @@ function DiaPage() {
         <div
           className="day-reading-content"
           data-mobile-hidden={showMobileSummary || showMobileSections}
+          role="dialog"
+          aria-modal={!showMobileSummary && !showMobileSections ? "true" : undefined}
+          aria-label={
+            !showMobileSummary && !showMobileSections
+              ? `Sección ${mobileNavigationSections[activeSectionIndex]?.label ?? "del día"}`
+              : undefined
+          }
         >
           <button
             type="button"
