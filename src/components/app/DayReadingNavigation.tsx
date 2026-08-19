@@ -12,10 +12,12 @@ export function DayReadingNavigation({
   sections,
   active,
   onSelect,
+  startIndex = 1,
 }: {
   sections: DayReadingSection[];
   active: string;
   onSelect: (id: string) => void;
+  startIndex?: number;
 }) {
   const [mobileOpen, setMobileOpen] = useState(true);
 
@@ -37,7 +39,7 @@ export function DayReadingNavigation({
         aria-current={active === section.id ? "location" : undefined}
         onClick={() => goTo(section.id)}
       >
-        <span>{index + 1}</span>
+        <span>{index + startIndex}</span>
         <span className="day-reading-nav__label">{section.label}</span>
         {mobile && <span className="day-reading-nav__hint">Ir a esta sección</span>}
       </button>

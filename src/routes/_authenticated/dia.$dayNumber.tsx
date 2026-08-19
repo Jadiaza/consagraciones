@@ -65,7 +65,7 @@ function DiaPage() {
   const [showReadingTools, setShowReadingTools] = useState(false);
   const [showMobileSummary, setShowMobileSummary] = useState(true);
   const [showMobileSections, setShowMobileSections] = useState(false);
-  const [activeSection, setActiveSection] = useState("preparacion");
+  const [activeSection, setActiveSection] = useState("inicio");
   const [slideDirection, setSlideDirection] = useState<"forward" | "backward">("forward");
   const [journal, setJournal] = useState("");
   const [saving, setSaving] = useState(false);
@@ -86,7 +86,7 @@ function DiaPage() {
   useEffect(() => {
     setShowMobileSummary(true);
     setShowMobileSections(false);
-    setActiveSection("preparacion");
+    setActiveSection("inicio");
   }, [n]);
 
   const savePreferences = (next: ReadingPreferences) => {
@@ -172,6 +172,7 @@ function DiaPage() {
   const { day, sections, scripture, doctrine, questions, media } = data;
   const podcast = media.find((m) => m.asset_type === "podcast");
   const navigationSections = [
+    { id: "inicio", label: "El día" },
     { id: "preparacion", label: "Preparación" },
     { id: "palabra", label: "Palabra" },
     ...(day.teaching || sections.length || day.church_teaching || doctrine.length
@@ -182,6 +183,26 @@ function DiaPage() {
     ...(day.prayer || day.progressive_consecration ? [{ id: "oracion", label: "Oración" }] : []),
     { id: "diario", label: "Diario" },
   ];
+  const mobileNavigationSections = [
+    { id: "resumen", label: "Resumen", hint: "Visión general y centro espiritual" },
+    ...navigationSections.map((section) => ({ ...section, hint: sectionHint(section.id) })),
+  ];
+  const activeSectionIndex = mobileNavigationSections.findIndex(
+    (section) => section.id === activeSection,
+  );
+  const previousSection = mobileNavigationSections[activeSectionIndex - 1];
+  const nextSection = mobileNavigationSections[activeSectionIndex + 1];
+  const goToSequenceSection = (id: string) => {
+    if (id === "resumen") {
+      setShowMobileSections(false);
+      setShowMobileSummary(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    selectSection(id);
+    setShowMobileSections(false);
+    setShowMobileSummary(false);
+  };
   const selectSection = (id: string) => {
     const currentIndex = navigationSections.findIndex((section) => section.id === activeSection);
     const nextIndex = navigationSections.findIndex((section) => section.id === id);
@@ -271,7 +292,7 @@ function DiaPage() {
           <div className="day-mobile-summary__actions">
             <Button
               onClick={() => {
-                selectSection("preparacion");
+                selectSection("inicio");
                 setShowMobileSummary(false);
                 setShowMobileSections(false);
               }}
@@ -301,7 +322,13 @@ function DiaPage() {
           </div>
         </section>
 
-        <section className="day-mobile-sections" data-visible={showMobileSections}>
+        <section
+          className="day-mobile-sections"
+          data-visible={showMobileSections}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Seleccionar una sección del día"
+        >
           <button
             type="button"
             className="day-mobile-screen-back"
@@ -318,18 +345,19 @@ function DiaPage() {
             <h2>Secciones del día</h2>
           </div>
           <div className="day-mobile-sections__list">
-            {navigationSections.map((section, index) => (
+            {mobileNavigationSections.map((section, index) => (
               <button
                 key={section.id}
                 type="button"
                 onClick={() => {
-                  selectSection(section.id);
-                  setShowMobileSections(false);
-                  setShowMobileSummary(false);
+                  goToSequenceSection(section.id);
                 }}
               >
                 <span>{index + 1}</span>
-                <strong>{section.label}</strong>
+                <span className="day-mobile-sections__copy">
+                  <strong>{section.label}</strong>
+                  <small>{section.hint}</small>
+                </span>
                 <ChevronRight aria-hidden />
               </button>
             ))}
@@ -358,9 +386,31 @@ function DiaPage() {
             sections={navigationSections}
             active={activeSection}
             onSelect={selectSection}
+            startIndex={2}
           />
 
           <div className="day-sections">
+            <section
+              id="panel-inicio"
+              role="tabpanel"
+              data-active={activeSection === "inicio"}
+              className={cn(
+                "day-section-panel",
+                activeSection === "inicio" && `slide-${slideDirection}`,
+              )}
+              aria-labelledby="tab-inicio"
+            >
+              <SectionTitle>2 · El día</SectionTitle>
+              {day.objective && (
+                <div className="surface-sacred rounded-2xl p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary">
+                    Objetivo y resultado esperado
+                  </p>
+                  <SacredText className="mt-2" children={day.objective} />
+                </div>
+              )}
+            </section>
+
             <section
               id="panel-preparacion"
               role="tabpanel"
@@ -371,17 +421,9 @@ function DiaPage() {
               )}
               aria-labelledby="tab-preparacion"
             >
-              {day.objective && (
-                <div className="surface-sacred rounded-2xl p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-primary">
-                    Objetivo del día
-                  </p>
-                  <SacredText className="mt-2" children={day.objective} />
-                </div>
-              )}
               {day.introduction && (
                 <>
-                  <SectionTitle hint="Ponte en la presencia de Dios">1 · Preparación</SectionTitle>
+                  <SectionTitle hint="Ponte en la presencia de Dios">3 · Preparación</SectionTitle>
                   <SacredText children={day.introduction} />
                 </>
               )}
@@ -399,7 +441,7 @@ function DiaPage() {
             >
               {scripture.length > 0 && (
                 <>
-                  <SectionTitle>2 · Palabra de Dios</SectionTitle>
+                  <SectionTitle>4 · Palabra de Dios</SectionTitle>
                   <div className="flex flex-col gap-3">
                     {scripture.map((s) => (
                       <ScriptureCard
@@ -412,7 +454,7 @@ function DiaPage() {
                   </div>
                 </>
               )}
-              <SectionTitle>3 · Escuchar el podcast</SectionTitle>
+              <SectionTitle>4.1 · Escuchar el podcast</SectionTitle>
               <AudioPlayer
                 src={MediaService.url(podcast ?? null)}
                 title={`Día ${n} · ${day.title}`}
@@ -436,7 +478,7 @@ function DiaPage() {
             >
               {day.teaching && (
                 <>
-                  <SectionTitle>4 · Enseñanza</SectionTitle>
+                  <SectionTitle>5 · Enseñanza</SectionTitle>
                   <SacredText children={day.teaching} />
                 </>
               )}
@@ -448,7 +490,7 @@ function DiaPage() {
               ))}
               {(day.church_teaching || doctrine.length > 0) && (
                 <>
-                  <SectionTitle>5 · La Iglesia nos enseña</SectionTitle>
+                  <SectionTitle>5.1 · La Iglesia nos enseña</SectionTitle>
                   {day.church_teaching && (
                     <SacredText className="mb-3" children={day.church_teaching} />
                   )}
@@ -483,7 +525,7 @@ function DiaPage() {
               {questions.length > 0 && (
                 <>
                   <SectionTitle hint="Responde con calma, en silencio">
-                    7 · Examen espiritual
+                    6.1 · Examen espiritual
                   </SectionTitle>
                   <ol className="flex flex-col gap-2">
                     {questions.map((q) => (
@@ -507,7 +549,7 @@ function DiaPage() {
                 )}
                 aria-labelledby="tab-proposito"
               >
-                <SectionTitle>8 · Propósito del día</SectionTitle>
+                <SectionTitle>7 · Propósito del día</SectionTitle>
                 <div className="surface-sacred rounded-2xl p-4">
                   <SacredText children={day.purpose} />
                   <Button
@@ -550,17 +592,17 @@ function DiaPage() {
             >
               {day.prayer && (
                 <>
-                  <SectionTitle>9 · Oración</SectionTitle>
+                  <SectionTitle>8 · Oración</SectionTitle>
                   <PrayerCard body={day.prayer} />
                 </>
               )}
-              <SectionTitle>10 · Coronilla de San Miguel</SectionTitle>
+              <SectionTitle>8.1 · Coronilla de San Miguel</SectionTitle>
               <Button asChild variant="outline" className="w-full">
                 <Link to="/coronilla">Rezar la Coronilla</Link>
               </Button>
               {day.progressive_consecration && (
                 <>
-                  <SectionTitle>11 · Consagración progresiva</SectionTitle>
+                  <SectionTitle>8.2 · Consagración progresiva</SectionTitle>
                   <PrayerCard body={day.progressive_consecration} />
                 </>
               )}
@@ -576,7 +618,7 @@ function DiaPage() {
               )}
               aria-labelledby="tab-diario"
             >
-              <SectionTitle hint="Estrictamente privado">12 · Diario espiritual</SectionTitle>
+              <SectionTitle hint="Estrictamente privado">9 · Diario espiritual</SectionTitle>
               <div className="surface-sacred rounded-2xl p-4">
                 <p className="text-sm text-muted-foreground">
                   ¿Qué me habló Dios hoy? ¿Qué debo cambiar? ¿Qué gracia quiero pedir? ¿Por quién
@@ -609,8 +651,53 @@ function DiaPage() {
               </Button>
             </section>
           </div>
+          <nav className="day-sequence-nav" aria-label="Navegación entre secciones">
+            {previousSection ? (
+              <button type="button" onClick={() => goToSequenceSection(previousSection.id)}>
+                <ChevronLeft aria-hidden />
+                <span>
+                  <small>Anterior</small>
+                  <strong>{previousSection.label}</strong>
+                </span>
+              </button>
+            ) : (
+              <span />
+            )}
+            <span className="day-sequence-nav__count">
+              {activeSectionIndex + 1} de {mobileNavigationSections.length}
+            </span>
+            {nextSection ? (
+              <button
+                type="button"
+                className="is-next"
+                onClick={() => goToSequenceSection(nextSection.id)}
+              >
+                <span>
+                  <small>Siguiente</small>
+                  <strong>{nextSection.label}</strong>
+                </span>
+                <ChevronRight aria-hidden />
+              </button>
+            ) : (
+              <span />
+            )}
+          </nav>
         </div>
       </div>
     </AppShell>
   );
+}
+
+function sectionHint(id: string) {
+  const hints: Record<string, string> = {
+    inicio: "Objetivo y resultado esperado",
+    preparacion: "Disposición interior",
+    palabra: "Lectura bíblica y podcast",
+    ensenanza: "Formación y doctrina",
+    meditacion: "Silencio y examen espiritual",
+    proposito: "Compromiso concreto del día",
+    oracion: "Oración y consagración",
+    diario: "Reflexión privada y finalización",
+  };
+  return hints[id] ?? "Contenido del día";
 }
