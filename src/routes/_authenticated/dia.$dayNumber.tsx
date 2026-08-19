@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, ChevronRight, Layers3, Lock, SlidersHorizontal } from "lucide-react";
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Layers3,
+  Lock,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -57,6 +64,7 @@ function DiaPage() {
   const [preferences, setPreferences] = useState<ReadingPreferences>(DEFAULT_READING_PREFERENCES);
   const [showReadingTools, setShowReadingTools] = useState(false);
   const [showMobileSummary, setShowMobileSummary] = useState(true);
+  const [showMobileSections, setShowMobileSections] = useState(false);
   const [activeSection, setActiveSection] = useState("preparacion");
   const [slideDirection, setSlideDirection] = useState<"forward" | "backward">("forward");
   const [journal, setJournal] = useState("");
@@ -77,6 +85,7 @@ function DiaPage() {
 
   useEffect(() => {
     setShowMobileSummary(true);
+    setShowMobileSections(false);
     setActiveSection("preparacion");
   }, [n]);
 
@@ -209,7 +218,7 @@ function DiaPage() {
       className="day-reader-shell"
     >
       <div
-        data-mobile-summary={showMobileSummary}
+        data-mobile-summary={showMobileSummary || showMobileSections}
         className={cn(
           "reading-surface",
           `reading-theme-${preferences.theme}`,
@@ -259,6 +268,7 @@ function DiaPage() {
               onClick={() => {
                 selectSection("preparacion");
                 setShowMobileSummary(false);
+                setShowMobileSections(false);
               }}
             >
               Continuar el día <ChevronRight aria-hidden />
@@ -268,17 +278,77 @@ function DiaPage() {
               onClick={() => {
                 selectSection("palabra");
                 setShowMobileSummary(false);
+                setShowMobileSections(false);
               }}
             >
               Leer la Palabra <BookOpen aria-hidden />
             </Button>
-            <Button variant="outline" onClick={() => setShowMobileSummary(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowMobileSummary(false);
+                setShowMobileSections(true);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
               Ver secciones <Layers3 aria-hidden />
             </Button>
           </div>
         </section>
 
-        <div className="day-reading-content" data-mobile-hidden={showMobileSummary}>
+        <section className="day-mobile-sections" data-visible={showMobileSections}>
+          <button
+            type="button"
+            className="day-mobile-screen-back"
+            onClick={() => {
+              setShowMobileSections(false);
+              setShowMobileSummary(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          >
+            <ChevronLeft aria-hidden /> Volver al resumen
+          </button>
+          <div className="day-mobile-sections__heading">
+            <p>Día {n} de 33</p>
+            <h2>Secciones del día</h2>
+          </div>
+          <div className="day-mobile-sections__list">
+            {navigationSections.map((section, index) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => {
+                  selectSection(section.id);
+                  setShowMobileSections(false);
+                  setShowMobileSummary(false);
+                }}
+              >
+                <span>{index + 1}</span>
+                <strong>{section.label}</strong>
+                <ChevronRight aria-hidden />
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <div
+          className="day-reading-content"
+          data-mobile-hidden={showMobileSummary || showMobileSections}
+        >
+          <button
+            type="button"
+            className="day-mobile-content-back"
+            onClick={() => {
+              setShowMobileSections(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          >
+            <ChevronLeft aria-hidden />
+            <span>
+              <small>Volver a</small>
+              <strong>Secciones del día</strong>
+            </span>
+          </button>
           <DayReadingNavigation
             sections={navigationSections}
             active={activeSection}
