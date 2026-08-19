@@ -183,7 +183,7 @@ export function DayRelatedContentManager({
   return (
     <div className="space-y-4 border-t border-white/10 pt-6">
       <div>
-        <h3 className="font-display text-xl text-[#e2b85e]">Contenido complementario</h3>
+        <h3 className="font-display text-xl text-[#8a6200]">Contenido complementario</h3>
         <p className="text-sm text-white/60">
           Estos registros alimentan directamente la pantalla pública de este día.
         </p>
@@ -296,9 +296,9 @@ function RelatedEditor({
   return (
     <details
       defaultOpen={defaultOpen}
-      className="rounded-xl border border-white/10 bg-[#071d34]/55"
+      className="rounded-xl border border-slate-200 bg-[#f8fafc]"
     >
-      <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-[#f5f1e8]">
+      <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-[#111827]">
         {config.title}{" "}
         <span className="ml-2 text-xs text-white/45">({query.data?.length ?? 0})</span>
       </summary>
@@ -308,13 +308,13 @@ function RelatedEditor({
             <Plus /> Nuevo
           </Button>
           {query.isLoading && <p className="text-sm text-white/55">Cargando…</p>}
-          {query.error && <p className="text-sm text-red-300">{readMessage(query.error)}</p>}
+          {query.error && <p className="text-sm font-medium text-red-700">{readMessage(query.error)}</p>}
           {query.data?.map((row) => (
             <button
               key={String(row.id)}
               type="button"
               onClick={() => edit(row)}
-              className={`flex w-full items-center gap-2 rounded-lg border p-3 text-left text-sm ${selectedId === row.id ? "border-[#d6a642] bg-[#d6a642]/10" : "border-white/10"}`}
+              className={`flex w-full items-center gap-2 rounded-lg border p-3 text-left text-sm ${selectedId === row.id ? "border-[#d4af37]/60 bg-[#fef3c7]/55" : "border-slate-200 bg-white"}`}
             >
               <span className="min-w-0 flex-1 truncate">{config.label(row)}</span>
               <Pencil className="size-4 shrink-0" />
@@ -341,7 +341,7 @@ function RelatedEditor({
             <Button
               type="button"
               disabled={busy}
-              className="bg-[#c99a3d] text-[#061426]"
+              className="bg-gradient-to-r from-[#f3c756] to-[#d4af37] text-[#07182a]"
               onClick={save}
             >
               <Save /> Guardar

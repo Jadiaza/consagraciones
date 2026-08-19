@@ -251,9 +251,9 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
               onClick={() =>
                 mode === "stages" ? chooseStage(item as never) : chooseDay(item as never)
               }
-              className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left ${selected === item.id ? "border-[#d6a642] bg-[#d6a642]/10" : "border-white/10"}`}
+              className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${selected === item.id ? "border-[#d4af37]/60 bg-[#fef3c7]/55" : "border-slate-200 bg-[#f8fafc] hover:bg-[#eef3f8]"}`}
             >
-              <b className="grid size-9 place-items-center rounded-full bg-[#c99a3d] text-[#061426]">
+              <b className="grid size-9 place-items-center rounded-full bg-[#c99c45] text-[#14202b]">
                 {mode === "stages"
                   ? "stage_number" in item
                     ? item.stage_number
@@ -300,7 +300,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                   if (next === "json") setDayJson(JSON.stringify(dayForm, null, 2));
                 }}
               >
-                <TabsList className="grid w-full grid-cols-2 bg-[#061426]/80">
+                <TabsList className="grid w-full grid-cols-2 border border-slate-200 bg-[#eef3f8] text-slate-600">
                   <TabsTrigger value="form">
                     <FileText className="size-4" />
                     Formulario
@@ -314,8 +314,8 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                   <DayForm form={dayForm} set={setDayForm} stages={stages.data ?? []} />
                 </TabsContent>
                 <TabsContent value="json" className="space-y-3 pt-3">
-                  <div className="rounded-xl border border-[#d6a642]/20 bg-[#d6a642]/5 p-3 text-xs leading-relaxed text-white/65">
-                    <b className="mb-1 block text-[#e2b85e]">Editor estructurado del día</b>
+                  <div className="rounded-xl border border-[#d4af37]/25 bg-[#fef3c7]/55 p-3 text-xs leading-relaxed text-slate-600">
+                    <b className="mb-1 block text-[#8a6200]">Editor estructurado del día</b>
                     Los cambios se sincronizan cuando el JSON es válido. Para dar formato dentro de
                     un texto use <code>## Título</code>, <code>### Subtítulo</code>,{" "}
                     <code>**negrita**</code>, <code>*cursiva*</code>, <code>&gt; cita</code> o{" "}
@@ -396,17 +396,17 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
                     }}
                   />
                   {dayJsonError ? (
-                    <p role="alert" className="text-sm text-red-300">
+                    <p role="alert" className="text-sm font-medium text-red-700">
                       {dayJsonError}
                     </p>
                   ) : (
-                    <p className="flex items-center gap-1.5 text-xs text-emerald-300">
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
                       <CheckCircle2 className="size-4" /> JSON válido y sincronizado con el
                       formulario.
                     </p>
                   )}
-                  <details className="rounded-xl border border-white/10 bg-[#061426]/45 p-3 text-xs text-white/60">
-                    <summary className="cursor-pointer font-semibold text-[#e2b85e]">
+                  <details className="rounded-xl border border-slate-200 bg-[#f8fafc] p-3 text-xs text-slate-600">
+                    <summary className="cursor-pointer font-semibold text-[#8a6200]">
                       Ver reglas de los campos JSON
                     </summary>
                     <ul className="mt-3 list-disc space-y-1.5 pl-5">
@@ -456,7 +456,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
             )}
             <Button
               disabled={save.isPending || Boolean(dayJsonError)}
-              className="bg-[#c99a3d] text-[#061426]"
+              className="bg-gradient-to-r from-[#f3c756] to-[#d4af37] text-[#07182a] shadow-sm hover:brightness-105"
             >
               <Save />
               Guardar

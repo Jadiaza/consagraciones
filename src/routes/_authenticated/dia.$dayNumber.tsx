@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Lock, SlidersHorizontal } from "lucide-react";
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Layers3,
+  Lock,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -29,11 +36,12 @@ import {
   nextAvailableDay,
 } from "@/lib/consecration";
 import { MediaService } from "@/lib/media-service";
+import { applyAppTheme, READING_PREFERENCES_KEY } from "@/lib/app-theme";
 import { cn } from "@/lib/utils";
+import "@/styles/day-modal-flow.css";
 
 export const Route = createFileRoute("/_authenticated/dia/$dayNumber")({ component: DiaPage });
 
-const READING_PREFERENCES_KEY = "lvj-consagraciones-reading-preferences";
 const DEFAULT_READING_PREFERENCES: ReadingPreferences = {
   size: 17,
   theme: "dark",
@@ -56,26 +64,43 @@ function DiaPage() {
 
   const [preferences, setPreferences] = useState<ReadingPreferences>(DEFAULT_READING_PREFERENCES);
   const [showReadingTools, setShowReadingTools] = useState(false);
+  const [showMobileSummary, setShowMobileSummary] = useState(true);
+  const [showMobileSections, setShowMobileSections] = useState(false);
+  const [activeSection, setActiveSection] = useState("inicio");
+  const [slideDirection, setSlideDirection] = useState<"forward" | "backward">("forward");
   const [journal, setJournal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(READING_PREFERENCES_KEY);
-      if (saved) setPreferences({ ...DEFAULT_READING_PREFERENCES, ...JSON.parse(saved) });
+      if (saved) {
+        const next = { ...DEFAULT_READING_PREFERENCES, ...JSON.parse(saved) };
+        setPreferences(next);
+        applyAppTheme(next.theme);
+      }
     } catch {
       // Keep safe defaults when storage is unavailable or contains invalid data.
     }
   }, []);
 
+  useEffect(() => {
+    setShowMobileSummary(true);
+    setShowMobileSections(false);
+    setActiveSection("inicio");
+  }, [n]);
+
   const savePreferences = (next: ReadingPreferences) => {
     setPreferences(next);
+    applyAppTheme(next.theme);
     try {
       window.localStorage.setItem(READING_PREFERENCES_KEY, JSON.stringify(next));
     } catch {
       // Reading preferences remain active for the current session.
     }
   };
+
+  const resetPreferences = () => savePreferences(DEFAULT_READING_PREFERENCES);
 
   const record = (progress ?? []).find((p) => p.day_number === n);
   const availableThrough = nextAvailableDay(progress);
@@ -148,6 +173,7 @@ function DiaPage() {
   const { day, sections, scripture, doctrine, questions, media } = data;
   const podcast = media.find((m) => m.asset_type === "podcast");
   const navigationSections = [
+    { id: "inicio", label: "El día" },
     { id: "preparacion", label: "Preparación" },
     { id: "palabra", label: "Palabra" },
     ...(day.teaching || sections.length || day.church_teaching || doctrine.length
@@ -158,6 +184,43 @@ function DiaPage() {
     ...(day.prayer || day.progressive_consecration ? [{ id: "oracion", label: "Oración" }] : []),
     { id: "diario", label: "Diario" },
   ];
+  const mobileNavigationSections = [
+    { id: "resumen", label: "Resumen", hint: "Visión general y centro espiritual" },
+    ...navigationSections.map((section) => ({ ...section, hint: sectionHint(section.id) })),
+  ];
+  const activeSectionIndex = mobileNavigationSections.findIndex(
+    (section) => section.id === activeSection,
+  );
+  const previousSection = mobileNavigationSections[activeSectionIndex - 1];
+  const nextSection = mobileNavigationSections[activeSectionIndex + 1];
+  const goToSequenceSection = (id: string) => {
+    if (id === "resumen") {
+      setShowMobileSections(false);
+      setShowMobileSummary(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    selectSection(id);
+    setShowMobileSections(false);
+    setShowMobileSummary(false);
+  };
+  const selectSection = (id: string) => {
+    const currentIndex = navigationSections.findIndex((section) => section.id === activeSection);
+    const nextIndex = navigationSections.findIndex((section) => section.id === id);
+    setSlideDirection(nextIndex >= currentIndex ? "forward" : "backward");
+    setActiveSection(id);
+    window.requestAnimationFrame(() => {
+      if (window.matchMedia("(min-width: 1025px)").matches) {
+        document
+          .getElementById(`panel-${id}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        document
+          .querySelector(".reading-day-header")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  };
 
   return (
     <AppShell
@@ -166,6 +229,7 @@ function DiaPage() {
       action={
         <button
           type="button"
+          data-reading-tools-trigger
           className="rounded-full border border-primary/25 p-2 text-primary transition hover:bg-primary/10"
           aria-label="Mostrar preferencias de lectura"
           aria-expanded={showReadingTools}
@@ -174,10 +238,12 @@ function DiaPage() {
           <SlidersHorizontal className="size-4" aria-hidden />
         </button>
       }
+      className="day-reader-shell"
     >
       <div
+        data-mobile-summary={showMobileSummary || showMobileSections}
         className={cn(
-          "reading-surface rounded-[1.4rem] border p-4 shadow-xl sm:p-6",
+          "reading-surface",
           `reading-theme-${preferences.theme}`,
           `reading-font-${preferences.font}`,
           `reading-align-${preferences.align}`,
@@ -193,190 +259,457 @@ function DiaPage() {
         </header>
 
         {showReadingTools && (
-          <ReadingToolbar preferences={preferences} onChange={savePreferences} />
+          <ReadingToolbar
+            preferences={preferences}
+            onChange={savePreferences}
+            onClose={() => setShowReadingTools(false)}
+            onReset={resetPreferences}
+          />
         )}
 
-        <DayReadingNavigation sections={navigationSections} />
+        <section
+          className="day-mobile-summary"
+          data-visible={showMobileSummary}
+          aria-label="Resumen del día"
+        >
+          <p className="day-mobile-summary__badge">
+            Día {n} de 33 · {day.estimated_minutes} minutos
+          </p>
+          <h2>{day.title}</h2>
+          {day.subtitle && <p className="day-mobile-summary__subtitle">{day.subtitle}</p>}
 
-        <span id="preparacion" className="reading-anchor" />
+          <SectionTitle>Resumen</SectionTitle>
+          <p className="day-mobile-summary__overview">
+            Hoy profundizarás en «{day.title}». La Palabra de Dios, la enseñanza, la meditación y la
+            oración te ayudarán a comprender este tema y a vivirlo dentro de tu camino de
+            consagración.
+          </p>
 
-        {day.objective && (
-          <div className="surface-sacred mt-4 rounded-2xl p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-primary">Objetivo del día</p>
-            <SacredText className="mt-2" children={day.objective} />
+          <SectionTitle>Centro espiritual</SectionTitle>
+          <div className="day-mobile-summary__center">
+            <SacredText children={day.motto || "¿Quién como Dios? ¡Nadie como Dios!"} />
           </div>
-        )}
-        {day.introduction && (
-          <>
-            <SectionTitle hint="Ponte en la presencia de Dios">1 · Preparación</SectionTitle>
-            <SacredText children={day.introduction} />
-          </>
-        )}
 
-        <span id="palabra" className="reading-anchor" />
-        {scripture.length > 0 && (
-          <>
-            <SectionTitle>2 · Palabra de Dios</SectionTitle>
-            <div className="flex flex-col gap-3">
-              {scripture.map((s) => (
-                <ScriptureCard
-                  key={s.id}
-                  citation={s.citation}
-                  passage={s.passage}
-                  commentary={s.commentary}
-                />
-              ))}
-            </div>
-          </>
-        )}
+          <p className="day-mobile-summary__status">
+            Contenido preparado para acompañarte en oración, formación y consagración.
+          </p>
 
-        <SectionTitle>3 · Escuchar el podcast</SectionTitle>
-        <AudioPlayer
-          src={MediaService.url(podcast ?? null)}
-          title={`Día ${n} · ${day.title}`}
-          subtitle={`${day.estimated_minutes} min aprox.`}
-          initialPosition={record?.audio_position_seconds ?? 0}
-          onPosition={(seconds) => {
-            if (seconds % 15 === 0) void upsert({ audio_position_seconds: seconds });
-          }}
-        />
+          <div className="day-mobile-summary__actions">
+            <Button
+              onClick={() => {
+                selectSection("inicio");
+                setShowMobileSummary(false);
+                setShowMobileSections(false);
+              }}
+            >
+              Continuar el día <ChevronRight aria-hidden />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                selectSection("palabra");
+                setShowMobileSummary(false);
+                setShowMobileSections(false);
+              }}
+            >
+              Leer la Palabra <BookOpen aria-hidden />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowMobileSummary(false);
+                setShowMobileSections(true);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              Ver secciones <Layers3 aria-hidden />
+            </Button>
+          </div>
+        </section>
 
-        <span id="ensenanza" className="reading-anchor" />
-        {day.teaching && (
-          <>
-            <SectionTitle>4 · Enseñanza</SectionTitle>
-            <SacredText children={day.teaching} />
-          </>
-        )}
-
-        {sections.map((section) => (
-          <section key={section.id}>
-            <SectionTitle>{section.title || "Contenido complementario"}</SectionTitle>
-            {section.body && <SacredText children={section.body} />}
-          </section>
-        ))}
-
-        {(day.church_teaching || doctrine.length > 0) && (
-          <>
-            <SectionTitle>5 · La Iglesia nos enseña</SectionTitle>
-            {day.church_teaching && <SacredText className="mb-3" children={day.church_teaching} />}
-            <div className="flex flex-col gap-3">
-              {doctrine.map((d) => (
-                <DoctrineCard
-                  key={d.id}
-                  referenceType={d.reference_type}
-                  author={d.author}
-                  work={d.work}
-                  reference={d.reference}
-                  excerpt={d.excerpt}
-                />
-              ))}
-            </div>
-          </>
-        )}
-
-        <span id="meditacion" className="reading-anchor" />
-        <SectionTitle>6 · Meditación</SectionTitle>
-        <MeditationCard text={day.meditation} />
-
-        {questions.length > 0 && (
-          <>
-            <SectionTitle hint="Responde con calma, en silencio">
-              7 · Examen espiritual
-            </SectionTitle>
-            <ol className="flex flex-col gap-2">
-              {questions.map((q) => (
-                <li key={q.id} className="surface-sacred rounded-xl p-4 leading-relaxed">
-                  {q.question}
-                </li>
-              ))}
-            </ol>
-          </>
-        )}
-
-        <span id="proposito" className="reading-anchor" />
-        {day.purpose && (
-          <>
-            <SectionTitle>8 · Propósito del día</SectionTitle>
-            <div className="surface-sacred rounded-2xl p-4">
-              <SacredText children={day.purpose} />
-              <Button
-                className="mt-4 w-full"
-                variant={record?.purpose_accepted ? "outline" : "default"}
-                onClick={() => void upsert({ purpose_accepted: true })}
+        <section
+          className="day-mobile-sections"
+          data-visible={showMobileSections}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Seleccionar una sección del día"
+        >
+          <button
+            type="button"
+            className="day-mobile-screen-back"
+            onClick={() => {
+              setShowMobileSections(false);
+              setShowMobileSummary(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          >
+            <ChevronLeft aria-hidden /> Volver al resumen
+          </button>
+          <div className="day-mobile-sections__heading">
+            <p>Día {n} de 33</p>
+            <h2>Secciones del día</h2>
+          </div>
+          <div className="day-mobile-sections__list">
+            {mobileNavigationSections.map((section, index) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => {
+                  goToSequenceSection(section.id);
+                }}
               >
-                {record?.purpose_accepted ? "Propósito asumido" : "Asumir este propósito"}
-              </Button>
-              {record?.purpose_accepted && (
-                <div className="mt-3">
-                  <p className="text-sm text-muted-foreground">¿Pudiste vivirlo?</p>
-                  <div className="mt-2 flex gap-2">
-                    {["Sí", "En parte", "Hoy me costó"].map((option) => (
-                      <Button
-                        key={option}
-                        size="sm"
-                        variant={record?.purpose_outcome === option ? "default" : "outline"}
-                        onClick={() => void upsert({ purpose_outcome: option })}
-                      >
-                        {option}
-                      </Button>
-                    ))}
-                  </div>
+                <span>{index + 1}</span>
+                <span className="day-mobile-sections__copy">
+                  <strong>{section.label}</strong>
+                  <small>{section.hint}</small>
+                </span>
+                <ChevronRight aria-hidden />
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <div
+          className="day-reading-content"
+          data-mobile-hidden={showMobileSummary || showMobileSections}
+          role="dialog"
+          aria-modal={!showMobileSummary && !showMobileSections ? "true" : undefined}
+          aria-label={
+            !showMobileSummary && !showMobileSections
+              ? `Sección ${mobileNavigationSections[activeSectionIndex]?.label ?? "del día"}`
+              : undefined
+          }
+        >
+          <button
+            type="button"
+            className="day-mobile-content-back"
+            onClick={() => {
+              setShowMobileSections(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          >
+            <ChevronLeft aria-hidden />
+            <span>
+              <small>Volver a</small>
+              <strong>Secciones del día</strong>
+            </span>
+          </button>
+          <DayReadingNavigation
+            sections={navigationSections}
+            active={activeSection}
+            onSelect={selectSection}
+            startIndex={2}
+          />
+
+          <div className="day-sections">
+            <section
+              id="panel-inicio"
+              role="tabpanel"
+              data-active={activeSection === "inicio"}
+              className={cn(
+                "day-section-panel",
+                activeSection === "inicio" && `slide-${slideDirection}`,
+              )}
+              aria-labelledby="tab-inicio"
+            >
+              <SectionTitle>2 · El día</SectionTitle>
+              {day.objective && (
+                <div className="surface-sacred rounded-2xl p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary">
+                    Objetivo y resultado esperado
+                  </p>
+                  <SacredText className="mt-2" children={day.objective} />
                 </div>
               )}
-            </div>
-          </>
-        )}
+            </section>
 
-        <span id="oracion" className="reading-anchor" />
-        {day.prayer && (
-          <>
-            <SectionTitle>9 · Oración</SectionTitle>
-            <PrayerCard body={day.prayer} />
-          </>
-        )}
+            <section
+              id="panel-preparacion"
+              role="tabpanel"
+              data-active={activeSection === "preparacion"}
+              className={cn(
+                "day-section-panel",
+                activeSection === "preparacion" && `slide-${slideDirection}`,
+              )}
+              aria-labelledby="tab-preparacion"
+            >
+              {day.introduction && (
+                <>
+                  <SectionTitle hint="Ponte en la presencia de Dios">3 · Preparación</SectionTitle>
+                  <SacredText children={day.introduction} />
+                </>
+              )}
+            </section>
 
-        <SectionTitle>10 · Coronilla de San Miguel</SectionTitle>
-        <Button asChild variant="outline" className="w-full">
-          <Link to="/coronilla">Rezar la Coronilla</Link>
-        </Button>
+            <section
+              id="panel-palabra"
+              role="tabpanel"
+              data-active={activeSection === "palabra"}
+              className={cn(
+                "day-section-panel",
+                activeSection === "palabra" && `slide-${slideDirection}`,
+              )}
+              aria-labelledby="tab-palabra"
+            >
+              {scripture.length > 0 && (
+                <>
+                  <SectionTitle>4 · Palabra de Dios</SectionTitle>
+                  <div className="flex flex-col gap-3">
+                    {scripture.map((s) => (
+                      <ScriptureCard
+                        key={s.id}
+                        citation={s.citation}
+                        passage={s.passage}
+                        commentary={s.commentary}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+              <SectionTitle>4.1 · Escuchar el podcast</SectionTitle>
+              <AudioPlayer
+                src={MediaService.url(podcast ?? null)}
+                title={`Día ${n} · ${day.title}`}
+                subtitle={`${day.estimated_minutes} min aprox.`}
+                initialPosition={record?.audio_position_seconds ?? 0}
+                onPosition={(seconds) => {
+                  if (seconds % 15 === 0) void upsert({ audio_position_seconds: seconds });
+                }}
+              />
+            </section>
 
-        {day.progressive_consecration && (
-          <>
-            <SectionTitle>11 · Consagración progresiva</SectionTitle>
-            <PrayerCard body={day.progressive_consecration} />
-          </>
-        )}
+            <section
+              id="panel-ensenanza"
+              role="tabpanel"
+              data-active={activeSection === "ensenanza"}
+              className={cn(
+                "day-section-panel",
+                activeSection === "ensenanza" && `slide-${slideDirection}`,
+              )}
+              aria-labelledby="tab-ensenanza"
+            >
+              {day.teaching && (
+                <>
+                  <SectionTitle>5 · Enseñanza</SectionTitle>
+                  <SacredText children={day.teaching} />
+                </>
+              )}
+              {sections.map((section) => (
+                <section key={section.id}>
+                  <SectionTitle>{section.title || "Contenido complementario"}</SectionTitle>
+                  {section.body && <SacredText children={section.body} />}
+                </section>
+              ))}
+              {(day.church_teaching || doctrine.length > 0) && (
+                <>
+                  <SectionTitle>5.1 · La Iglesia nos enseña</SectionTitle>
+                  {day.church_teaching && (
+                    <SacredText className="mb-3" children={day.church_teaching} />
+                  )}
+                  <div className="flex flex-col gap-3">
+                    {doctrine.map((d) => (
+                      <DoctrineCard
+                        key={d.id}
+                        referenceType={d.reference_type}
+                        author={d.author}
+                        work={d.work}
+                        reference={d.reference}
+                        excerpt={d.excerpt}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
 
-        <span id="diario" className="reading-anchor" />
-        <SectionTitle hint="Estrictamente privado">12 · Diario espiritual</SectionTitle>
-        <div className="surface-sacred rounded-2xl p-4">
-          <p className="text-sm text-muted-foreground">
-            ¿Qué me habló Dios hoy? ¿Qué debo cambiar? ¿Qué gracia quiero pedir? ¿Por quién quiero
-            orar?
-          </p>
-          <Textarea
-            className="mt-3 min-h-32"
-            maxLength={5000}
-            value={journal}
-            onChange={(e) => setJournal(e.target.value)}
-          />
-          <Button className="mt-3 w-full" variant="outline" disabled={saving} onClick={saveJournal}>
-            Guardar en mi diario
-          </Button>
+            <section
+              id="panel-meditacion"
+              role="tabpanel"
+              data-active={activeSection === "meditacion"}
+              className={cn(
+                "day-section-panel",
+                activeSection === "meditacion" && `slide-${slideDirection}`,
+              )}
+              aria-labelledby="tab-meditacion"
+            >
+              <SectionTitle>6 · Meditación</SectionTitle>
+              <MeditationCard text={day.meditation} />
+              {questions.length > 0 && (
+                <>
+                  <SectionTitle hint="Responde con calma, en silencio">
+                    6.1 · Examen espiritual
+                  </SectionTitle>
+                  <ol className="flex flex-col gap-2">
+                    {questions.map((q) => (
+                      <li key={q.id} className="surface-sacred rounded-xl p-4 leading-relaxed">
+                        {q.question}
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+            </section>
+
+            {day.purpose && (
+              <section
+                id="panel-proposito"
+                role="tabpanel"
+                data-active={activeSection === "proposito"}
+                className={cn(
+                  "day-section-panel",
+                  activeSection === "proposito" && `slide-${slideDirection}`,
+                )}
+                aria-labelledby="tab-proposito"
+              >
+                <SectionTitle>7 · Propósito del día</SectionTitle>
+                <div className="surface-sacred rounded-2xl p-4">
+                  <SacredText children={day.purpose} />
+                  <Button
+                    className="mt-4 w-full"
+                    variant={record?.purpose_accepted ? "outline" : "default"}
+                    onClick={() => void upsert({ purpose_accepted: true })}
+                  >
+                    {record?.purpose_accepted ? "Propósito asumido" : "Asumir este propósito"}
+                  </Button>
+                  {record?.purpose_accepted && (
+                    <div className="mt-3">
+                      <p className="text-sm text-muted-foreground">¿Pudiste vivirlo?</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {["Sí", "En parte", "Hoy me costó"].map((option) => (
+                          <Button
+                            key={option}
+                            size="sm"
+                            variant={record?.purpose_outcome === option ? "default" : "outline"}
+                            onClick={() => void upsert({ purpose_outcome: option })}
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            <section
+              id="panel-oracion"
+              role="tabpanel"
+              data-active={activeSection === "oracion"}
+              className={cn(
+                "day-section-panel",
+                activeSection === "oracion" && `slide-${slideDirection}`,
+              )}
+              aria-labelledby="tab-oracion"
+            >
+              {day.prayer && (
+                <>
+                  <SectionTitle>8 · Oración</SectionTitle>
+                  <PrayerCard body={day.prayer} />
+                </>
+              )}
+              <SectionTitle>8.1 · Coronilla de San Miguel</SectionTitle>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/coronilla">Rezar la Coronilla</Link>
+              </Button>
+              {day.progressive_consecration && (
+                <>
+                  <SectionTitle>8.2 · Consagración progresiva</SectionTitle>
+                  <PrayerCard body={day.progressive_consecration} />
+                </>
+              )}
+            </section>
+
+            <section
+              id="panel-diario"
+              role="tabpanel"
+              data-active={activeSection === "diario"}
+              className={cn(
+                "day-section-panel",
+                activeSection === "diario" && `slide-${slideDirection}`,
+              )}
+              aria-labelledby="tab-diario"
+            >
+              <SectionTitle hint="Estrictamente privado">9 · Diario espiritual</SectionTitle>
+              <div className="surface-sacred rounded-2xl p-4">
+                <p className="text-sm text-muted-foreground">
+                  ¿Qué me habló Dios hoy? ¿Qué debo cambiar? ¿Qué gracia quiero pedir? ¿Por quién
+                  quiero orar?
+                </p>
+                <Textarea
+                  className="mt-3 min-h-32"
+                  maxLength={5000}
+                  value={journal}
+                  onChange={(e) => setJournal(e.target.value)}
+                />
+                <Button
+                  className="mt-3 w-full"
+                  variant="outline"
+                  disabled={saving}
+                  onClick={saveJournal}
+                >
+                  Guardar en mi diario
+                </Button>
+              </div>
+              <Button
+                className="mt-8 h-13 w-full text-base"
+                size="lg"
+                onClick={() => {
+                  void upsert({ completed: true, completed_at: new Date().toISOString() });
+                  toast.success("Día completado. Tu camino continúa.");
+                }}
+              >
+                {record?.completed ? "Día completado" : "He completado este día"}
+              </Button>
+            </section>
+          </div>
+          <nav className="day-sequence-nav" aria-label="Navegación entre secciones">
+            {previousSection ? (
+              <button type="button" onClick={() => goToSequenceSection(previousSection.id)}>
+                <ChevronLeft aria-hidden />
+                <span>
+                  <small>Anterior</small>
+                  <strong>{previousSection.label}</strong>
+                </span>
+              </button>
+            ) : (
+              <span />
+            )}
+            <span className="day-sequence-nav__count">
+              {activeSectionIndex + 1} de {mobileNavigationSections.length}
+            </span>
+            {nextSection ? (
+              <button
+                type="button"
+                className="is-next"
+                onClick={() => goToSequenceSection(nextSection.id)}
+              >
+                <span>
+                  <small>Siguiente</small>
+                  <strong>{nextSection.label}</strong>
+                </span>
+                <ChevronRight aria-hidden />
+              </button>
+            ) : (
+              <span />
+            )}
+          </nav>
         </div>
-
-        <Button
-          className="mt-8 h-13 w-full text-base"
-          size="lg"
-          onClick={() => {
-            void upsert({ completed: true, completed_at: new Date().toISOString() });
-            toast.success("Día completado. Tu camino continúa.");
-          }}
-        >
-          {record?.completed ? "Día completado" : "He completado este día"}
-        </Button>
       </div>
     </AppShell>
   );
+}
+
+function sectionHint(id: string) {
+  const hints: Record<string, string> = {
+    inicio: "Objetivo y resultado esperado",
+    preparacion: "Disposición interior",
+    palabra: "Lectura bíblica y podcast",
+    ensenanza: "Formación y doctrina",
+    meditacion: "Silencio y examen espiritual",
+    proposito: "Compromiso concreto del día",
+    oracion: "Oración y consagración",
+    diario: "Reflexión privada y finalización",
+  };
+  return hints[id] ?? "Contenido del día";
 }

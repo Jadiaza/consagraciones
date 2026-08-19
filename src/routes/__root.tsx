@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { applyAppTheme, loadStoredAppTheme } from "@/lib/app-theme";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -92,7 +93,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Consagración 33 días a los Santos Arcángeles" },
       {
         property: "og:description",
-        content: "¿Quién como Dios? ¡Nadie como Dios! Un camino de fe, conversión, santidad y misión.",
+        content:
+          "¿Quién como Dios? ¡Nadie como Dios! Un camino de fe, conversión, santidad y misión.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -136,6 +138,13 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+
+  useEffect(() => {
+    applyAppTheme(loadStoredAppTheme());
+    const syncTheme = () => applyAppTheme(loadStoredAppTheme());
+    window.addEventListener("storage", syncTheme);
+    return () => window.removeEventListener("storage", syncTheme);
+  }, []);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {

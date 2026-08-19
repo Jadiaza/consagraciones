@@ -15,20 +15,20 @@ export function SpiritualHeader({
 }) {
   const navigate = useNavigate();
   return (
-    <header className="sticky top-0 z-30 flex h-[calc(56px+env(safe-area-inset-top))] items-end gap-2 border-b border-[#c99a3d]/12 bg-[#04101f]/92 px-3 pb-2 backdrop-blur-xl">
+    <header className="spiritual-header sticky top-0 z-30 flex h-[calc(56px+env(safe-area-inset-top))] items-end gap-2 border-b px-3 pb-2 backdrop-blur-xl">
       {back ? (
         <button
           type="button"
           aria-label="Volver"
           onClick={() => void navigate({ to: "..", replace: false })}
-          className="flex size-10 items-center justify-center rounded-full text-[#f5f1e8]/85 transition hover:bg-[#e2b85e]/10 hover:text-[#e2b85e] focus-visible:outline-2 focus-visible:outline-[#e2b85e]"
+          className="spiritual-header__button flex size-10 items-center justify-center rounded-full transition focus-visible:outline-2"
         >
           <ChevronLeft className="size-5" />
         </button>
       ) : (
         <span className="size-10" aria-hidden />
       )}
-      <h1 className="flex-1 truncate pb-2 text-center font-display text-base tracking-wide text-[#f5f1e8]">
+      <h1 className="spiritual-header__title flex-1 truncate pb-2 text-center font-display text-base tracking-wide">
         {title}
       </h1>
       <span className="flex min-w-10 justify-end pb-1">{action}</span>
@@ -48,7 +48,7 @@ export function BottomNavigation() {
   return (
     <nav
       aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#c99a3d]/15 bg-[#04101f]/96 backdrop-blur-xl"
+      className="bottom-navigation fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="mx-auto flex max-w-2xl">
@@ -57,8 +57,8 @@ export function BottomNavigation() {
             <Link
               to={to}
               aria-label={label}
-              className="flex min-h-16 flex-col items-center justify-center gap-1 py-2 text-[11px] text-[#b8c2d1] transition-colors hover:text-[#f5f1e8] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#e2b85e]"
-              activeProps={{ className: "!text-[#e2b85e]" }}
+              className="bottom-navigation__link flex min-h-16 flex-col items-center justify-center gap-1 py-2 text-[11px] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
+              activeProps={{ className: "is-active" }}
             >
               <Icon className="size-5" aria-hidden />
               <span>{label}</span>
@@ -86,7 +86,7 @@ export function AppShell({
   className?: string | undefined;
 }) {
   return (
-    <div className="relative min-h-dvh text-foreground">
+    <div className="app-shell relative min-h-dvh text-foreground">
       <div
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(201,154,61,.08),transparent_28rem)]"
         aria-hidden

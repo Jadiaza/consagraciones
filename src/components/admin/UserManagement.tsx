@@ -114,11 +114,11 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
             const p = data.data!.profiles.find((v) => v.id === x.user_id);
             return (
               <div key={x.id} className="flex gap-3 border-b border-white/10 py-3">
-                <CheckCircle2 className="text-emerald-300" />
+                <CheckCircle2 className="text-emerald-700" />
                 <div className="text-sm">
                   <b>{p?.display_name || p?.full_name || "Usuario"}</b>{" "}
                   {x.completed ? "completó" : "actualizó"} el Día {x.day_number}
-                  <p className="text-xs text-[#8fa3b8]">
+                  <p className="text-xs text-[#667085]">
                     {new Date(x.updated_at).toLocaleString("es-CO")}
                   </p>
                 </div>
@@ -147,7 +147,7 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
     >
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] text-sm">
-          <thead className="text-left text-xs uppercase text-[#8398ad]">
+          <thead className="text-left text-xs uppercase text-[#52657a]">
             <tr>
               <th className="py-3">Usuario</th>
               <th>Consagración</th>
@@ -162,11 +162,11 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
               <tr key={x.id}>
                 <td className="py-3">
                   <span className="flex items-center gap-2">
-                    {x.superAdmin ? <ShieldCheck className="text-[#d6a642]" /> : <UserRound />}
+                    {x.superAdmin ? <ShieldCheck className="text-[#8a6200]" /> : <UserRound />}
                     <span>
                       {x.display_name || x.full_name || "Sin nombre"}
                       {x.superAdmin && (
-                        <small className="block text-[#d6a642]">Superadministrador</small>
+                        <small className="block font-medium text-[#8a6200]">Superadministrador</small>
                       )}
                     </span>
                   </span>
@@ -179,7 +179,7 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
                 <td>{x.enrollment?.status || "—"}</td>
                 <td>
                   {x.superAdmin ? (
-                    <b className="text-[#d6a642]">admin</b>
+                    <b className="text-[#8a6200]">admin</b>
                   ) : (
                     <Select
                       value={x.role}
