@@ -934,6 +934,10 @@ html[data-app-theme="sepia"] {
     display: none;
   }
 
+  .day-mobile-summary {
+    display: none;
+  }
+
   @media (max-width: 640px) {
     .reading-surface {
       padding: 1rem 1rem 3rem;
@@ -941,6 +945,96 @@ html[data-app-theme="sepia"] {
 
     .reading-day-header h1 {
       font-size: clamp(1.65rem, 8vw, 2.25rem);
+    }
+
+    .reading-surface[data-mobile-summary="true"] .reading-day-header {
+      display: none;
+    }
+
+    .day-mobile-summary {
+      display: block;
+      padding: 0.35rem 0 1.25rem;
+    }
+
+    .day-mobile-summary__badge {
+      border: 1px solid var(--reading-border);
+      border-radius: 999px;
+      color: var(--reading-muted);
+      display: inline-flex;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.68rem;
+      padding: 0.35rem 0.65rem;
+    }
+
+    .day-mobile-summary > h2 {
+      color: var(--reading-fg);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.08;
+      margin-top: 1.1rem;
+      text-wrap: balance;
+    }
+
+    .day-mobile-summary__subtitle {
+      color: var(--reading-muted);
+      font-size: 0.83rem;
+      font-style: italic;
+      margin-top: 0.55rem;
+    }
+
+    .day-mobile-summary .font-display {
+      border: 0;
+      color: var(--reading-fg) !important;
+      font-size: 1.15rem;
+      margin-top: 1.4rem;
+      padding: 0;
+    }
+
+    .day-mobile-summary .sacred-text {
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .day-mobile-summary__center {
+      background: var(--reading-card);
+      border-left: 2px solid var(--reading-accent);
+      border-radius: 0 0.75rem 0.75rem 0;
+      margin-top: 0.65rem;
+      padding: 0.8rem 0.9rem;
+    }
+
+    .day-mobile-summary__status {
+      border: 1px solid var(--reading-border);
+      border-radius: 0.75rem;
+      color: var(--reading-muted);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      margin-top: 1rem;
+      padding: 0.8rem;
+    }
+
+    .day-mobile-summary__actions {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 1rem;
+    }
+
+    .day-mobile-summary__actions button {
+      justify-content: space-between;
+      min-height: 2.8rem;
+      width: 100%;
+    }
+
+    .day-mobile-summary__actions svg {
+      height: 1rem;
+      width: 1rem;
+    }
+
+    .day-reading-content[data-mobile-hidden="true"] {
+      display: none;
     }
 
     .day-reading-nav--desktop {
