@@ -173,7 +173,7 @@ function DiaPage() {
   const { day, sections, scripture, doctrine, questions, media } = data;
   const podcast = media.find((m) => m.asset_type === "podcast");
   const navigationSections = [
-    { id: "inicio", label: "El día" },
+    { id: "inicio", label: "Objetivo del día" },
     { id: "preparacion", label: "Preparación" },
     { id: "palabra", label: "Palabra" },
     ...(day.teaching || sections.length || day.church_teaching || doctrine.length
@@ -412,11 +412,11 @@ function DiaPage() {
               )}
               aria-labelledby="tab-inicio"
             >
-              <SectionTitle>2 · El día</SectionTitle>
+              <SectionTitle>2 · Objetivo del día</SectionTitle>
               {day.objective && (
                 <div className="surface-sacred rounded-2xl p-4">
                   <p className="text-xs uppercase tracking-[0.18em] text-primary">
-                    Objetivo y resultado esperado
+                    Lo que aprenderás y alcanzarás al finalizar
                   </p>
                   <SacredText className="mt-2" children={day.objective} />
                 </div>
@@ -702,7 +702,7 @@ function DiaPage() {
 
 function sectionHint(id: string) {
   const hints: Record<string, string> = {
-    inicio: "Objetivo y resultado esperado",
+    inicio: "Lo que aprenderás y alcanzarás al finalizar",
     preparacion: "Disposición interior",
     palabra: "Lectura bíblica y podcast",
     ensenanza: "Formación y doctrina",
