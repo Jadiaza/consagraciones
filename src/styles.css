@@ -855,7 +855,7 @@ html[data-app-theme="sepia"] {
     color: #20170b;
   }
 
-  .day-reading-nav button.is-active span {
+  .day-reading-nav button.is-active > span:first-child {
     background: var(--reading-bg);
     color: var(--reading-accent);
   }
@@ -998,6 +998,12 @@ html[data-app-theme="sepia"] {
     }
 
     .day-mobile-summary .sacred-text {
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .day-mobile-summary__overview {
+      color: var(--reading-fg);
       font-size: 0.95rem;
       line-height: 1.65;
     }

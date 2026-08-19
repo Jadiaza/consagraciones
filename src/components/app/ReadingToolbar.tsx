@@ -8,7 +8,7 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -49,11 +49,30 @@ export function ReadingToolbar({
   onReset: () => void;
 }) {
   const [tab, setTab] = useState<"theme" | "font" | "format" | "more">("theme");
+  const toolbarRef = useRef<HTMLElement>(null);
   const update = <K extends keyof ReadingPreferences>(key: K, value: ReadingPreferences[K]) =>
     onChange({ ...preferences, [key]: value });
 
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (toolbarRef.current?.contains(target)) return;
+      if ((target as Element).closest?.("[data-reading-tools-trigger]")) return;
+      onClose();
+    };
+    const closeWithEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeWithEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeWithEscape);
+    };
+  }, [onClose]);
+
   return (
-    <aside className="reading-toolbar" aria-label="Preferencias de lectura">
+    <aside ref={toolbarRef} className="reading-toolbar" aria-label="Preferencias de lectura">
       <div className="reading-toolbar__topbar">
         <strong>Preferencias de lectura</strong>
         <button type="button" aria-label="Cerrar preferencias" onClick={onClose}>

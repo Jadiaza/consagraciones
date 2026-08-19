@@ -207,6 +207,7 @@ function DiaPage() {
       action={
         <button
           type="button"
+          data-reading-tools-trigger
           className="rounded-full border border-primary/25 p-2 text-primary transition hover:bg-primary/10"
           aria-label="Mostrar preferencias de lectura"
           aria-expanded={showReadingTools}
@@ -252,7 +253,11 @@ function DiaPage() {
           {day.subtitle && <p className="day-mobile-summary__subtitle">{day.subtitle}</p>}
 
           <SectionTitle>Resumen</SectionTitle>
-          <SacredText children={day.objective || day.introduction} />
+          <p className="day-mobile-summary__overview">
+            Hoy profundizarás en «{day.title}». La Palabra de Dios, la enseñanza, la meditación y la
+            oración te ayudarán a comprender este tema y a vivirlo dentro de tu camino de
+            consagración.
+          </p>
 
           <SectionTitle>Centro espiritual</SectionTitle>
           <div className="day-mobile-summary__center">
