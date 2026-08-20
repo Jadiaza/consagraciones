@@ -50,7 +50,9 @@ function Coronilla() {
     );
 
   const bySlug = (slug: string) => prayers.find((p) => p.slug === slug);
-  const opening = prayers.filter((p) => p.kind === "opening");
+  const opening = prayers.filter(
+    (p) => p.kind === "opening" && p.slug !== "oracion-inicial-san-miguel",
+  );
   const closing = prayers.filter((p) => p.kind === "closing");
   const guidedClosing = closing.flatMap((prayer) => {
     if (prayer.slug === "invocacion-final-triple") {
