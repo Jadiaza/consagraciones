@@ -1,3 +1,4 @@
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export function PrayerBead({ active, done }: { active: boolean; done: boolean })
 }
 
 export function RosaryCounter({
+  groupPrayer,
   invocation,
   response,
   gloria,
@@ -32,6 +34,7 @@ export function RosaryCounter({
   onProgress,
   onFinished,
 }: {
+  groupPrayer: string;
   invocation: string;
   response: string;
   gloria: string;
@@ -42,13 +45,15 @@ export function RosaryCounter({
 }) {
   const [group, setGroup] = useState(initialGroup);
   const [bead, setBead] = useState(initialBead);
-  const [showGloria, setShowGloria] = useState(false);
+  const [phase, setPhase] = useState<"group-prayer" | "beads" | "gloria">(
+    initialBead > 0 ? "beads" : "group-prayer",
+  );
 
   const advance = () => {
     vibrate();
     if (bead + 1 >= BEADS) {
       setBead(BEADS);
-      setShowGloria(true);
+      setPhase("gloria");
       onProgress?.(group, BEADS);
       return;
     }
@@ -57,13 +62,13 @@ export function RosaryCounter({
   };
 
   const nextGroup = () => {
-    setShowGloria(false);
     if (group >= GROUPS) {
       onFinished?.();
       return;
     }
     setGroup(group + 1);
     setBead(0);
+    setPhase("group-prayer");
     onProgress?.(group + 1, 0);
   };
 
@@ -72,38 +77,78 @@ export function RosaryCounter({
   return (
     <div className="flex flex-col items-center">
       <p className="text-xs uppercase tracking-[0.25em] text-primary">
-        Grupo {group} de {GROUPS}
+        Ronda {group} de {GROUPS}
       </p>
 
-      <div className="relative mt-6 size-64">
-        {Array.from({ length: BEADS }).map((_, index) => {
-          const a = angle(index);
-          return (
-            <span
-              key={index}
-              className="absolute left-1/2 top-1/2"
-              style={{ transform: `translate(${Math.cos(a) * 110 - 7}px, ${Math.sin(a) * 110 - 7}px)` }}
-            >
-              <PrayerBead active={index === bead && !showGloria} done={index < bead} />
-            </span>
-          );
-        })}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="font-display text-4xl text-primary">
-            {Math.min(bead, BEADS)} / {BEADS}
-          </span>
-          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">cuentas</span>
-        </div>
-      </div>
-
-      {showGloria ? (
-        <div className="mt-8 w-full text-center">
-          <p className="whitespace-pre-line text-[15px] leading-relaxed">{gloria}</p>
-          <Button className="mt-6 w-full" size="lg" onClick={nextGroup}>
-            {group >= GROUPS ? "Terminar los cinco grupos" : "Continuar al siguiente grupo"}
+      {phase === "group-prayer" ? (
+        <div className="mt-6 w-full text-center">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            Oración de inicio de la ronda
+          </p>
+          <p className="mt-4 whitespace-pre-line font-display text-xl leading-relaxed">
+            {groupPrayer}
+          </p>
+          <Button
+            className="mt-6 h-14 w-full text-base"
+            size="lg"
+            onClick={() => setPhase("beads")}
+          >
+            Comenzar las diez cuentas
           </Button>
         </div>
-      ) : (
+      ) : phase === "beads" ? (
+        <div className="relative mt-6 size-64">
+          {Array.from({ length: BEADS }).map((_, index) => {
+            const a = angle(index);
+            return (
+              <span
+                key={index}
+                className="absolute left-1/2 top-1/2"
+                style={{
+                  transform: `translate(${Math.cos(a) * 110 - 7}px, ${Math.sin(a) * 110 - 7}px)`,
+                }}
+              >
+                <PrayerBead active={index === bead && phase === "beads"} done={index < bead} />
+              </span>
+            );
+          })}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <span className="font-display text-4xl text-primary">
+              {Math.min(bead, BEADS)} / {BEADS}
+            </span>
+            <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              cuentas
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      {phase === "gloria" ? (
+        <div className="mt-6 w-full text-center">
+          <span className="mx-auto flex size-16 items-center justify-center rounded-full border border-primary/35 bg-primary/10 text-primary shadow-[var(--shadow-halo)]">
+            <CheckCircle2 className="size-8" aria-hidden />
+          </span>
+          <p className="mt-4 text-xs uppercase tracking-[0.18em] text-primary">
+            Diez cuentas completadas
+          </p>
+          <h3 className="mt-2 font-display text-2xl">Reza ahora el Gloria</h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Haz una breve pausa y proclama esta oración antes de continuar.
+          </p>
+          <div className="mt-5 rounded-2xl border border-primary/30 bg-primary/5 p-5 text-left">
+            <p className="whitespace-pre-line font-display text-lg leading-relaxed">{gloria}</p>
+          </div>
+          <Button className="mt-6 h-14 w-full text-base" size="lg" onClick={nextGroup}>
+            {group >= GROUPS ? "He rezado el Gloria · Finalizar rondas" : "He rezado el Gloria"}
+            <ChevronRight className="size-5" aria-hidden />
+          </Button>
+          {group < GROUPS && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              A continuación comenzarás la ronda {group + 1} de {GROUPS}.
+            </p>
+          )}
+        </div>
+      ) : phase === "beads" ? (
         <div className="mt-8 w-full text-center">
           <p className="font-display text-2xl">{invocation}</p>
           <p className="mt-1 font-display text-2xl text-primary">{response}</p>
@@ -112,7 +157,7 @@ export function RosaryCounter({
           </Button>
           <p className="mt-2 text-xs text-muted-foreground">Toca para avanzar a tu propio ritmo.</p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
