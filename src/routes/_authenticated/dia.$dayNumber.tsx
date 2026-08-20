@@ -64,7 +64,7 @@ function DiaPage() {
 
   const [preferences, setPreferences] = useState<ReadingPreferences>(DEFAULT_READING_PREFERENCES);
   const [showReadingTools, setShowReadingTools] = useState(false);
-  const [showMobileSummary, setShowMobileSummary] = useState(true);
+  const [showMobileSummary, setShowMobileSummary] = useState(false);
   const [showMobileSections, setShowMobileSections] = useState(false);
   const [activeSection, setActiveSection] = useState("inicio");
   const [slideDirection, setSlideDirection] = useState<"forward" | "backward">("forward");
@@ -85,7 +85,7 @@ function DiaPage() {
   }, []);
 
   useEffect(() => {
-    setShowMobileSummary(true);
+    setShowMobileSummary(window.matchMedia("(max-width: 640px)").matches);
     setShowMobileSections(false);
     setActiveSection("inicio");
   }, [n]);
