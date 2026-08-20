@@ -1,3 +1,4 @@
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -95,7 +96,7 @@ export function RosaryCounter({
             Comenzar las diez cuentas
           </Button>
         </div>
-      ) : (
+      ) : phase === "beads" ? (
         <div className="relative mt-6 size-64">
           {Array.from({ length: BEADS }).map((_, index) => {
             const a = angle(index);
@@ -120,17 +121,32 @@ export function RosaryCounter({
             </span>
           </div>
         </div>
-      )}
+      ) : null}
 
       {phase === "gloria" ? (
-        <div className="mt-8 w-full text-center">
-          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-primary">
-            Al finalizar las diez cuentas
+        <div className="mt-6 w-full text-center">
+          <span className="mx-auto flex size-16 items-center justify-center rounded-full border border-primary/35 bg-primary/10 text-primary shadow-[var(--shadow-halo)]">
+            <CheckCircle2 className="size-8" aria-hidden />
+          </span>
+          <p className="mt-4 text-xs uppercase tracking-[0.18em] text-primary">
+            Diez cuentas completadas
           </p>
-          <p className="whitespace-pre-line text-[15px] leading-relaxed">{gloria}</p>
-          <Button className="mt-6 w-full" size="lg" onClick={nextGroup}>
-            {group >= GROUPS ? "Terminar las cinco rondas" : "Continuar a la siguiente ronda"}
+          <h3 className="mt-2 font-display text-2xl">Reza ahora el Gloria</h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Haz una breve pausa y proclama esta oración antes de continuar.
+          </p>
+          <div className="mt-5 rounded-2xl border border-primary/30 bg-primary/5 p-5 text-left">
+            <p className="whitespace-pre-line font-display text-lg leading-relaxed">{gloria}</p>
+          </div>
+          <Button className="mt-6 h-14 w-full text-base" size="lg" onClick={nextGroup}>
+            {group >= GROUPS ? "He rezado el Gloria · Finalizar rondas" : "He rezado el Gloria"}
+            <ChevronRight className="size-5" aria-hidden />
           </Button>
+          {group < GROUPS && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              A continuación comenzarás la ronda {group + 1} de {GROUPS}.
+            </p>
+          )}
         </div>
       ) : phase === "beads" ? (
         <div className="mt-8 w-full text-center">
