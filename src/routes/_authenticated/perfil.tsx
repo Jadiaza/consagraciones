@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { SlidersHorizontal } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -92,7 +92,29 @@ function Perfil() {
   };
 
   return (
-    <AppShell title="Mi consagración">
+    <AppShell
+      title="Mi consagración"
+      action={
+        <button
+          type="button"
+          className="spiritual-header__button flex size-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2"
+          aria-label="Configurar formato de la aplicación"
+          title="Configurar formato"
+          data-reading-tools-trigger
+          onClick={() => setShowReadingTools(true)}
+        >
+          <Settings className="size-5" aria-hidden />
+        </button>
+      }
+    >
+      {showReadingTools && (
+        <ReadingToolbar
+          preferences={preferences}
+          onChange={savePreferences}
+          onClose={() => setShowReadingTools(false)}
+          onReset={() => savePreferences(DEFAULT_READING_PREFERENCES)}
+        />
+      )}
       <div className="surface-sacred rounded-2xl p-4">
         <p className="font-display text-lg">{displayName}</p>
         <p className="text-sm text-muted-foreground">Mensajero de San Miguel</p>
@@ -106,39 +128,6 @@ function Perfil() {
 
       <div className="mt-4">
         <ProgressCard completed={completed} total={33} />
-      </div>
-
-      <SectionTitle hint="Tema general y formato de las lecturas">Apariencia</SectionTitle>
-      <div className="surface-sacred rounded-2xl p-4">
-        <div className="flex items-start gap-3">
-          <div className="rounded-full bg-primary/10 p-2 text-primary">
-            <SlidersHorizontal className="size-5" aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium">Formato de la aplicación</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Elige el tema, la fuente, el tamaño, la alineación y el espaciado que te ayuden a orar
-              y leer con comodidad.
-            </p>
-          </div>
-        </div>
-        <Button
-          className="mt-4 w-full"
-          variant="outline"
-          data-reading-tools-trigger
-          onClick={() => setShowReadingTools((current) => !current)}
-        >
-          <SlidersHorizontal className="size-4" aria-hidden />
-          Configurar formato de la aplicación
-        </Button>
-        {showReadingTools && (
-          <ReadingToolbar
-            preferences={preferences}
-            onChange={savePreferences}
-            onClose={() => setShowReadingTools(false)}
-            onReset={() => savePreferences(DEFAULT_READING_PREFERENCES)}
-          />
-        )}
       </div>
 
       <SectionTitle hint="Privada, sólo tú puedes verla">Mi intención</SectionTitle>
