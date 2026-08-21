@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { AppShell } from "@/components/app/AppShell";
+import { SacredText } from "@/components/app/SacredText";
 import {
   EmptyState,
   ErrorState,
@@ -58,9 +59,10 @@ function Recursos() {
                       onClick={() => setOpen(open === item.id ? null : item.id)}
                     />
                     {open === item.id && item.body && (
-                      <p className="mt-2 whitespace-pre-line rounded-2xl bg-secondary/40 p-4 text-[15px] leading-relaxed">
-                        {item.body}
-                      </p>
+                      <SacredText
+                        className="mt-2 rounded-2xl bg-secondary/40 p-4 text-[15px] leading-relaxed"
+                        children={item.body}
+                      />
                     )}
                   </div>
                 ))}
