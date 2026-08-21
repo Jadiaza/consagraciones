@@ -75,7 +75,14 @@ export function ReadingToolbar({
   }, [onClose]);
 
   return (
-    <div className="reading-toolbar-modal" role="presentation">
+    <div
+      className={cn(
+        "reading-toolbar-modal",
+        `reading-theme-${preferences.theme}`,
+        `reading-font-${preferences.font}`,
+      )}
+      role="presentation"
+    >
       <aside
         ref={toolbarRef}
         className="reading-toolbar"
