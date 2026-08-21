@@ -101,7 +101,7 @@ export function RosaryCounter({
             size="lg"
             onClick={() => setPhase("beads")}
           >
-            {bead > 0 ? `Continuar a la cuenta ${bead + 1}` : "Continuar a la primera cuenta"}
+            {bead > 0 ? `Continuar en la cuenta ${bead + 1}` : "Ir a las cuentas"}
           </Button>
         </div>
       ) : phase === "beads" ? (
