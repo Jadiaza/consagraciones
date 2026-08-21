@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, ChevronRight, CircleDot, Hand, Headphones, Play, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app/AppShell";
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/coronilla")({ component: C
 
 function Coronilla() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = Route.useNavigate();
   const { data: prayers, isLoading } = useQuery(prayersQuery());
   const { data: savedProgress, isLoading: isLoadingProgress } = useQuery({
@@ -40,6 +41,16 @@ function Coronilla() {
   const [modo, setModo] = useState<Modo>(null);
   const [guidedStep, setGuidedStep] = useState(0);
   const [completed, setCompleted] = useState(false);
+
+  useEffect(() => {
+    if (!savedProgress || !prayers || modo !== null) return;
+    const openingCount = prayers.filter(
+      (prayer) => prayer.kind === "opening" && prayer.slug !== "oracion-inicial-san-miguel",
+    ).length;
+    setGuidedStep(openingCount);
+    setCompleted(false);
+    setModo("interactiva");
+  }, [modo, prayers, savedProgress]);
 
   if (isLoading || isLoadingProgress || !prayers)
     return (
@@ -98,6 +109,23 @@ function Coronilla() {
     } catch {
       toast.error("No pudimos guardar tu cuenta. Intenta de nuevo.");
     }
+  };
+
+  const finishRounds = async () => {
+    if (user) {
+      const { error } = await supabase
+        .from("user_prayer_progress")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("prayer_slug", "coronilla-san-miguel");
+      if (error) {
+        toast.error("Las rondas terminaron, pero no pudimos limpiar el progreso guardado.");
+      } else {
+        queryClient.setQueryData(["coronilla-progress", user.id], null);
+      }
+    }
+    toast.success("Has completado las cinco rondas. Continúa con las oraciones finales.");
+    setGuidedStep((step) => Math.min(step + 1, guidedTotal - 1));
   };
 
   if (modo === null) {
@@ -264,12 +292,7 @@ function Coronilla() {
                 initialGroup={savedProgress?.current_group ?? 1}
                 initialBead={savedProgress?.current_bead ?? 0}
                 onSaveAndExit={saveAndExit}
-                onFinished={() => {
-                  toast.success(
-                    "Has completado las cinco rondas. Continúa con las oraciones finales.",
-                  );
-                  setGuidedStep((step) => Math.min(step + 1, guidedTotal - 1));
-                }}
+                onFinished={() => void finishRounds()}
               />
             </div>
           ) : currentPrayer ? (
