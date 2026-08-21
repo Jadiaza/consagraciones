@@ -1,14 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  CircleDot,
-  Hand,
-  Headphones,
-  Sparkles,
-} from "lucide-react";
+import { Check, ChevronRight, CircleDot, Hand, Headphones, Play, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -22,27 +14,31 @@ import { prayersQuery } from "@/lib/consecration";
 
 type Modo = null | "interactiva" | "manual" | "audio";
 
-const SAN_MIGUEL_ROUND_PRAYER =
-  "San Miguel Arcángel, defiéndenos en la pelea. Sé nuestro amparo y refugio contra las asechanzas del demonio. ¡Reprímele, oh Dios, con voz imperiosa, como rendidamente te lo suplicamos! Y tú, Príncipe de las Milicias Celestiales, armado del poder divino, precipita al infierno a Satanás y a todos los espíritus malignos que, para la perdición de las almas, vagan por el mundo. Amén.";
-const FINAL_INVOCATION =
-  "San Miguel Arcángel, con tu luz ilumínanos, con tus alas protégenos y con tu espada desafiante.";
-const MISERABLES_PEREGRINOS =
-  "Somos miserables peregrinos en la tierra, pero somos tus devotos, oh, glorioso San Miguel Arcángel, ruega por nosotros.";
-const FINAL_RESPONSE =
-  "Para que seamos dignos de alcanzar las divinas gracias de Nuestro Señor Jesucristo. Amén.";
-const FINAL_PRAYER =
-  "Oh Señor, que la poderosa intercesión del Arcángel San Miguel nos proteja siempre de todo mal y peligro y nos conduzca a la vida eterna. Por Jesucristo nuestro Señor. Amén.";
-
 export const Route = createFileRoute("/_authenticated/coronilla")({ component: Coronilla });
 
 function Coronilla() {
   const { user } = useAuth();
+  const navigate = Route.useNavigate();
   const { data: prayers, isLoading } = useQuery(prayersQuery());
+  const { data: savedProgress, isLoading: isLoadingProgress } = useQuery({
+    queryKey: ["coronilla-progress", user?.id],
+    enabled: Boolean(user),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_prayer_progress")
+        .select("current_group,current_bead")
+        .eq("user_id", user!.id)
+        .eq("prayer_slug", "coronilla-san-miguel")
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
   const [modo, setModo] = useState<Modo>(null);
   const [guidedStep, setGuidedStep] = useState(0);
   const [completed, setCompleted] = useState(false);
 
-  if (isLoading || !prayers)
+  if (isLoading || isLoadingProgress || !prayers)
     return (
       <AppShell title="Coronilla">
         <LoadingState />
@@ -60,16 +56,11 @@ function Coronilla() {
         ...prayer,
         id: `${prayer.id}-${index + 1}`,
         title: `Invocación final · ${index + 1} de 3`,
-        body: FINAL_INVOCATION,
-        response: null,
       }));
     }
-    if (prayer.slug === "peregrinos") {
-      return [{ ...prayer, body: MISERABLES_PEREGRINOS, response: FINAL_RESPONSE }];
-    }
-    if (prayer.slug === "oracion-final") return [{ ...prayer, body: FINAL_PRAYER }];
     return [prayer];
   });
+  const roundPrayer = bySlug("oracion-inicio-ronda");
   const bead = bySlug("invocacion-cuenta");
   const gloria = bySlug("gloria-grupo");
   const guidedTotal = opening.length + 1 + guidedClosing.length;
@@ -82,7 +73,7 @@ function Coronilla() {
 
   const saveProgress = async (group: number, beadIndex: number) => {
     if (!user) return;
-    await supabase.from("user_prayer_progress").upsert(
+    const { error } = await supabase.from("user_prayer_progress").upsert(
       {
         user_id: user.id,
         prayer_slug: "coronilla-san-miguel",
@@ -92,20 +83,41 @@ function Coronilla() {
       },
       { onConflict: "user_id,prayer_slug" },
     );
+    if (error) throw error;
+  };
+
+  const saveAndExit = async (group: number, beadIndex: number) => {
+    try {
+      await saveProgress(group, beadIndex);
+      toast.success("Guardamos tu última cuenta.");
+      await navigate({ to: "/dashboard" });
+    } catch {
+      toast.error("No pudimos guardar tu cuenta. Intenta de nuevo.");
+    }
   };
 
   if (modo === null) {
     return (
       <AppShell title="Coronilla · Selección">
-        <h1 className="text-center font-display text-2xl">Coronilla de San Miguel Arcángel</h1>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          Elige la forma en que deseas rezarla.
-        </p>
-        <div className="mt-6 flex flex-col gap-3">
+        <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/15 via-card to-accent/15 px-5 py-8 text-center shadow-[var(--shadow-halo)]">
+          <span className="mx-auto flex size-14 items-center justify-center rounded-full border border-primary/25 bg-background/70 text-primary">
+            <CircleDot className="size-7" aria-hidden />
+          </span>
+          <p className="mt-4 text-xs uppercase tracking-[0.24em] text-primary">
+            Momento de oración
+          </p>
+          <h1 className="mt-2 font-display text-3xl">Coronilla de San Miguel Arcángel</h1>
+          <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            Elige cómo deseas rezar. En el modo interactivo avanzas una sola vez por cada cuenta.
+          </p>
+        </section>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <ModeCard
             icon={<Sparkles className="size-5" />}
             title="Modo interactivo"
             hint="Reza paso a paso con ayudas visuales"
+            badge={savedProgress?.current_bead ? "Continuar" : "Recomendado"}
+            featured
             onClick={() => chooseMode("interactiva")}
           />
           <ModeCard
@@ -153,7 +165,7 @@ function Coronilla() {
                 Al comenzar cada ronda
               </p>
               <p className="mt-2 whitespace-pre-line font-display text-lg leading-relaxed">
-                {SAN_MIGUEL_ROUND_PRAYER}
+                {roundPrayer?.body}
               </p>
               <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 En cada una de las diez cuentas
@@ -168,20 +180,7 @@ function Coronilla() {
           )}
           {gloria && <PrayerCard title={gloria.title} body={gloria.body} />}
           {closing.map((p) => (
-            <PrayerCard
-              key={p.id}
-              title={p.title}
-              body={
-                p.slug === "invocacion-final-triple"
-                  ? FINAL_INVOCATION
-                  : p.slug === "peregrinos"
-                    ? MISERABLES_PEREGRINOS
-                    : p.slug === "oracion-final"
-                      ? FINAL_PRAYER
-                      : p.body
-              }
-              response={p.slug === "peregrinos" ? FINAL_RESPONSE : p.response}
-            />
+            <PrayerCard key={p.id} title={p.title} body={p.body} response={p.response} />
           ))}
         </div>
         <Button className="mt-6 w-full" variant="outline" onClick={() => setModo(null)}>
@@ -254,11 +253,13 @@ function Coronilla() {
           {isCounterStep ? (
             <div className="surface-sacred rounded-3xl p-5">
               <RosaryCounter
-                groupPrayer={SAN_MIGUEL_ROUND_PRAYER}
+                groupPrayer={roundPrayer?.body ?? ""}
                 invocation={bead?.body ?? "¿Quién como Dios?"}
                 response={bead?.response ?? "¡Nadie como Dios!"}
                 gloria={gloria?.body ?? ""}
-                onProgress={(group, index) => void saveProgress(group, index)}
+                initialGroup={savedProgress?.current_group ?? 1}
+                initialBead={savedProgress?.current_bead ?? 0}
+                onSaveAndExit={saveAndExit}
                 onFinished={() => {
                   toast.success(
                     "Has completado las cinco rondas. Continúa con las oraciones finales.",
@@ -281,19 +282,10 @@ function Coronilla() {
           ) : null}
         </div>
 
-        <div className="mt-5 grid grid-cols-[4rem_1fr_4rem] items-center gap-3">
-          <button
-            type="button"
-            aria-label="Oración anterior"
-            disabled={guidedStep === 0 || isCounterStep}
-            className="flex size-16 items-center justify-center rounded-full border border-primary/60 text-primary disabled:opacity-30"
-            onClick={() => setGuidedStep((step) => Math.max(0, step - 1))}
-          >
-            <ChevronLeft className="size-7" aria-hidden />
-          </button>
+        <div className="mt-5">
           {!isCounterStep && (
             <Button
-              className="h-14 rounded-full"
+              className="h-14 w-full rounded-full"
               onClick={() => {
                 if (isLastStep) setCompleted(true);
                 else setGuidedStep((step) => Math.min(step + 1, guidedTotal - 1));
@@ -303,21 +295,16 @@ function Coronilla() {
               <ChevronRight className="size-5" aria-hidden />
             </Button>
           )}
-          {isCounterStep && <span />}
-          <button
-            type="button"
-            aria-label="Siguiente oración"
-            disabled={isCounterStep || isLastStep}
-            className="flex size-16 items-center justify-center rounded-full border border-primary/60 text-primary disabled:opacity-30"
-            onClick={() => setGuidedStep((step) => Math.min(step + 1, guidedTotal - 1))}
-          >
-            <ChevronRight className="size-7" aria-hidden />
-          </button>
         </div>
-
-        <Button className="mt-5 w-full" variant="outline" onClick={() => setModo(null)}>
-          Volver a modalidades
-        </Button>
+        {!isCounterStep && (
+          <Button
+            className="mt-3 w-full"
+            variant="ghost"
+            onClick={() => void navigate({ to: "/dashboard" })}
+          >
+            Salir de la coronilla
+          </Button>
+        )}
       </div>
     </AppShell>
   );
@@ -327,25 +314,42 @@ function ModeCard({
   icon,
   title,
   hint,
+  badge,
+  featured = false,
   onClick,
 }: {
   icon: React.ReactNode;
   title: string;
   hint: string;
+  badge?: string;
+  featured?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      className="surface-sacred flex items-center gap-3 rounded-2xl p-4 text-left"
+      className={`group relative flex min-h-28 items-center gap-4 overflow-hidden rounded-2xl border p-5 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        featured
+          ? "border-primary/45 bg-gradient-to-br from-primary/15 to-card sm:col-span-2"
+          : "border-border bg-card/80"
+      }`}
     >
-      <span className="text-primary" aria-hidden>
+      <span
+        className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105"
+        aria-hidden
+      >
         {icon}
       </span>
-      <span>
-        <span className="block font-display text-sm">{title}</span>
-        <span className="block text-xs text-muted-foreground">{hint}</span>
+      <span className="min-w-0 flex-1">
+        {badge && (
+          <span className="mb-1 block text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-primary">
+            {badge}
+          </span>
+        )}
+        <span className="block font-display text-base">{title}</span>
+        <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{hint}</span>
       </span>
+      <Play className="size-4 shrink-0 text-primary/70" aria-hidden />
     </button>
   );
 }

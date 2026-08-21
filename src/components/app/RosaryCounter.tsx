@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight, LogOut } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ export function RosaryCounter({
   initialGroup = 1,
   initialBead = 0,
   onProgress,
+  onSaveAndExit,
   onFinished,
 }: {
   groupPrayer: string;
@@ -41,13 +42,15 @@ export function RosaryCounter({
   initialGroup?: number;
   initialBead?: number;
   onProgress?: (group: number, bead: number) => void;
+  onSaveAndExit?: (group: number, bead: number) => void | Promise<void>;
   onFinished?: () => void;
 }) {
   const [group, setGroup] = useState(initialGroup);
   const [bead, setBead] = useState(initialBead);
-  const [phase, setPhase] = useState<"group-prayer" | "beads" | "gloria">(
-    initialBead > 0 ? "beads" : "group-prayer",
-  );
+  const [phase, setPhase] = useState<"group-prayer" | "beads" | "gloria">(() => {
+    if (initialBead >= BEADS) return "gloria";
+    return initialBead > 0 ? "beads" : "group-prayer";
+  });
 
   const advance = () => {
     vibrate();
@@ -59,25 +62,6 @@ export function RosaryCounter({
     }
     setBead(bead + 1);
     onProgress?.(group, bead + 1);
-  };
-
-  const goBack = () => {
-    vibrate();
-
-    if (phase === "gloria") {
-      setBead(BEADS - 1);
-      setPhase("beads");
-      onProgress?.(group, BEADS - 1);
-      return;
-    }
-
-    if (bead > 0) {
-      setBead(bead - 1);
-      onProgress?.(group, bead - 1);
-      return;
-    }
-
-    setPhase("group-prayer");
   };
 
   const nextGroup = () => {
@@ -161,10 +145,6 @@ export function RosaryCounter({
             {group >= GROUPS ? "He rezado el Gloria · Finalizar rondas" : "He rezado el Gloria"}
             <ChevronRight className="size-5" aria-hidden />
           </Button>
-          <Button className="mt-3 w-full" variant="ghost" onClick={goBack}>
-            <ChevronLeft className="size-4" aria-hidden />
-            Volver a la última cuenta
-          </Button>
           {group < GROUPS && (
             <p className="mt-2 text-xs text-muted-foreground">
               A continuación comenzarás la ronda {group + 1} de {GROUPS}.
@@ -178,13 +158,18 @@ export function RosaryCounter({
           <Button className="mt-6 h-14 w-full text-base" size="lg" onClick={advance}>
             Rezar esta cuenta
           </Button>
-          <Button className="mt-3 w-full" variant="ghost" onClick={goBack}>
-            <ChevronLeft className="size-4" aria-hidden />
-            {bead > 0 ? "Volver a la cuenta anterior" : "Volver a la oración de la ronda"}
-          </Button>
           <p className="mt-2 text-xs text-muted-foreground">Toca para avanzar a tu propio ritmo.</p>
         </div>
       ) : null}
+
+      <Button
+        className="mt-6 w-full"
+        variant="outline"
+        onClick={() => void onSaveAndExit?.(group, bead)}
+      >
+        <LogOut className="size-4" aria-hidden />
+        Guardar la última cuenta y salir
+      </Button>
     </div>
   );
 }
