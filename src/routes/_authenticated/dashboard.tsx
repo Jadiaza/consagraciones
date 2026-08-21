@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { BookOpen, CircleDot, Heart, NotebookPen, Users, Sparkles } from "lucide-react";
+import { BookOpen, CircleDot, Clock3, Heart, NotebookPen, Users, Sparkles } from "lucide-react";
 import { useEffect } from "react";
 
 import angeles from "@/assets/angeles.jpg";
@@ -37,6 +37,7 @@ function Dashboard() {
   const currentStage = (stages ?? []).find(
     (s) => currentDay >= s.start_day && currentDay <= s.end_day,
   );
+  const currentDayImage = currentDayInfo?.hero_image?.trim() || angeles;
 
   return (
     <AppShell>
@@ -47,36 +48,50 @@ function Dashboard() {
         </p>
       </header>
 
-      <section className="surface-sacred mt-5 overflow-hidden rounded-2xl">
-        <div className="relative h-20 border-b border-primary/15">
+      <section className="surface-sacred group relative mt-5 min-h-[20rem] overflow-hidden rounded-[1.75rem] border-primary/20 shadow-[0_18px_45px_-22px_rgba(84,55,11,0.55)]">
+        <div className="absolute inset-0">
           <img
-            src={angeles}
-            alt=""
-            aria-hidden
+            src={currentDayImage}
+            alt={`Portada del día ${currentDay}: ${currentDayInfo?.title || "Consagración"}`}
             width={1536}
             height={1024}
-            className="size-full object-cover object-[center_42%] opacity-35"
+            className="size-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.02]"
+            onError={(event) => {
+              if (event.currentTarget.src !== angeles) event.currentTarget.src = angeles;
+            }}
           />
           <div
             className="absolute inset-0"
-            style={{ background: "var(--gradient-veil)" }}
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(22,16,9,.92) 0%, rgba(22,16,9,.78) 48%, rgba(22,16,9,.24) 78%, rgba(22,16,9,.12) 100%), linear-gradient(0deg, rgba(22,16,9,.72) 0%, transparent 48%)",
+            }}
             aria-hidden
           />
         </div>
-        <div className="relative p-4 sm:p-5">
-          <p className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-primary">
+        <div className="relative flex min-h-[20rem] max-w-[84%] flex-col justify-end p-5 text-white sm:max-w-[68%] sm:p-7">
+          <p className="inline-flex w-fit rounded-full border border-white/25 bg-black/25 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#f5c969] backdrop-blur-sm">
             Día actual
           </p>
-          <p className="mt-2 font-display text-3xl font-semibold leading-none">
+          <p className="mt-3 font-display text-[2.35rem] font-semibold leading-none drop-shadow-sm">
             Día {currentDay}{" "}
-            <span className="text-lg font-normal text-muted-foreground">de 33</span>
+            <span className="text-xl font-normal text-white/80">de 33</span>
           </p>
-          <p className="mt-2 text-base font-medium leading-snug">
+          <p className="mt-3 text-lg font-semibold leading-snug text-white drop-shadow-sm">
             {currentDayInfo?.title || "Continúa tu camino de consagración"}
           </p>
-          <Button asChild className="mt-4 w-full" size="lg">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/80">
+            {currentStage && <span>Etapa {romanize(currentStage.stage_number)}</span>}
+            {currentDayInfo?.estimated_minutes && (
+              <span className="inline-flex items-center gap-1">
+                <Clock3 className="size-3.5" aria-hidden />
+                {currentDayInfo.estimated_minutes} minutos
+              </span>
+            )}
+          </div>
+          <Button asChild className="mt-5 w-full bg-[#d7a53e] text-[#201507] hover:bg-[#e5b956]" size="lg">
             <Link to="/dia/$dayNumber" params={{ dayNumber: String(currentDay) }}>
-              Continuar día
+              Continuar mi camino
             </Link>
           </Button>
         </div>

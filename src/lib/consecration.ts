@@ -55,7 +55,7 @@ export const daysQuery = (consecrationId?: string) =>
       if (!consecration) return [];
       const { data, error } = await supabase
         .from("consecration_days")
-        .select("id, day_number, title, subtitle, stage_id, estimated_minutes")
+        .select("id, day_number, title, subtitle, stage_id, estimated_minutes, hero_image")
         .eq("consecration_id", consecration.id)
         .eq("status", "published")
         .order("day_number");
