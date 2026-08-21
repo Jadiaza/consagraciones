@@ -457,6 +457,18 @@ html[data-app-theme="sepia"] {
     font-family: Karla, ui-sans-serif, system-ui, sans-serif;
   }
 
+  html[class*="reading-font-"] body,
+  html[class*="reading-font-"] button,
+  html[class*="reading-font-"] input,
+  html[class*="reading-font-"] textarea,
+  html[class*="reading-font-"] select {
+    font-family: inherit;
+  }
+
+  html[class*="reading-font-"] .app-shell main {
+    font-size: var(--app-reading-size, 17px);
+  }
+
   .reading-align-left .sacred-text p,
   .reading-align-left .sacred-text li {
     text-align: left;
