@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { applyAppTheme, loadStoredAppTheme } from "@/lib/app-theme";
+import { applyReadingPreferences, loadReadingPreferences } from "@/lib/reading-preferences";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -140,10 +141,13 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    applyAppTheme(loadStoredAppTheme());
-    const syncTheme = () => applyAppTheme(loadStoredAppTheme());
-    window.addEventListener("storage", syncTheme);
-    return () => window.removeEventListener("storage", syncTheme);
+    const syncPreferences = () => {
+      applyAppTheme(loadStoredAppTheme());
+      applyReadingPreferences(loadReadingPreferences());
+    };
+    syncPreferences();
+    window.addEventListener("storage", syncPreferences);
+    return () => window.removeEventListener("storage", syncPreferences);
   }, []);
 
   useEffect(() => {
