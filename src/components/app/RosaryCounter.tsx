@@ -49,7 +49,7 @@ export function RosaryCounter({
   const [bead, setBead] = useState(initialBead);
   const [phase, setPhase] = useState<"group-prayer" | "beads" | "gloria">(() => {
     if (initialBead >= BEADS) return "gloria";
-    return initialBead > 0 ? "beads" : "group-prayer";
+    return "group-prayer";
   });
 
   const advance = () => {
@@ -111,14 +111,16 @@ export function RosaryCounter({
             {groupPrayer}
           </p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            Después de rezar esta oración, continúa con la primera de las diez cuentas.
+            {bead > 0
+              ? `Después de rezar esta oración, continúa con la cuenta ${bead + 1} de diez.`
+              : "Después de rezar esta oración, continúa con la primera de las diez cuentas."}
           </p>
           <Button
             className="mt-6 h-14 w-full text-base"
             size="lg"
             onClick={() => setPhase("beads")}
           >
-            Continuar a la primera cuenta
+            {bead > 0 ? `Continuar a la cuenta ${bead + 1}` : "Continuar a la primera cuenta"}
           </Button>
         </div>
       ) : phase === "beads" ? (
