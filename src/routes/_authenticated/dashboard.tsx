@@ -48,14 +48,14 @@ function Dashboard() {
       </header>
 
       <section className="surface-sacred mt-5 overflow-hidden rounded-2xl">
-        <div className="relative h-32">
+        <div className="relative h-20 border-b border-primary/15">
           <img
             src={angeles}
             alt=""
             aria-hidden
             width={1536}
             height={1024}
-            className="size-full object-cover opacity-60"
+            className="size-full object-cover object-[center_42%] opacity-35"
           />
           <div
             className="absolute inset-0"
@@ -63,10 +63,17 @@ function Dashboard() {
             aria-hidden
           />
         </div>
-        <div className="-mt-10 relative p-4">
-          <p className="text-xs uppercase tracking-[0.22em] text-primary">Día actual</p>
-          <p className="font-display text-2xl">Día {currentDay} de 33</p>
-          <p className="mt-1 text-sm text-muted-foreground">{currentDayInfo?.title}</p>
+        <div className="relative p-4 sm:p-5">
+          <p className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-primary">
+            Día actual
+          </p>
+          <p className="mt-2 font-display text-3xl font-semibold leading-none">
+            Día {currentDay}{" "}
+            <span className="text-lg font-normal text-muted-foreground">de 33</span>
+          </p>
+          <p className="mt-2 text-base font-medium leading-snug">
+            {currentDayInfo?.title || "Continúa tu camino de consagración"}
+          </p>
           <Button asChild className="mt-4 w-full" size="lg">
             <Link to="/dia/$dayNumber" params={{ dayNumber: String(currentDay) }}>
               Continuar día
