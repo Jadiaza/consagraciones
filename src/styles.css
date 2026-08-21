@@ -417,6 +417,16 @@ html[data-app-theme="sepia"] {
     color-scheme: light;
   }
 
+  .reading-theme-dark {
+    --reading-bg: #0b1d31;
+    --reading-fg: #f7f2e7;
+    --reading-muted: #b8c4d2;
+    --reading-card: #112d49;
+    --reading-border: rgb(226 184 94 / 30%);
+    --reading-accent: #e2b85e;
+    color-scheme: dark;
+  }
+
   .reading-theme-sepia {
     --reading-bg: #f4e5c5;
     --reading-fg: #382a1c;
@@ -655,13 +665,17 @@ html[data-app-theme="sepia"] {
     width: min(34rem, 100%);
   }
 
+  .reading-toolbar button {
+    background: transparent;
+  }
+
   .reading-toolbar__topbar {
     align-items: center;
     display: flex;
     font-family: ui-sans-serif, system-ui, sans-serif;
     justify-content: space-between;
-    min-height: 3rem;
-    padding: 0.35rem 0.75rem 0.35rem 1rem;
+    min-height: 3.6rem;
+    padding: 0.55rem 0.75rem 0.55rem 1rem;
   }
 
   .reading-toolbar__topbar strong {
@@ -695,7 +709,7 @@ html[data-app-theme="sepia"] {
     border-bottom: 2px solid transparent;
     color: var(--reading-muted);
     font-family: ui-sans-serif, system-ui, sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 700;
     min-height: 2.85rem;
   }
@@ -722,6 +736,7 @@ html[data-app-theme="sepia"] {
     align-items: center;
     border: 1px solid var(--reading-border);
     border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--reading-card) 42%, transparent);
     color: var(--reading-muted);
     display: inline-flex;
     font-family: ui-sans-serif, system-ui, sans-serif;
@@ -737,6 +752,7 @@ html[data-app-theme="sepia"] {
   .reading-toolbar__choices > button.is-active,
   .reading-toolbar__reset:hover {
     border-color: var(--reading-accent);
+    background: color-mix(in srgb, var(--reading-card) 78%, var(--reading-bg));
     color: var(--reading-accent);
   }
 
@@ -1438,13 +1454,13 @@ html[data-app-theme="sepia"] {
     }
 
     .reading-toolbar-modal {
-      align-items: flex-end;
-      padding: 0;
+      align-items: flex-start;
+      padding: calc(4.4rem + env(safe-area-inset-top)) 0.75rem 0.75rem;
     }
 
     .reading-toolbar {
-      border-radius: 1.5rem 1.5rem 0 0;
-      max-height: calc(88dvh - env(safe-area-inset-top));
+      border-radius: 1.35rem;
+      max-height: calc(100dvh - 5.2rem - env(safe-area-inset-top));
       width: 100%;
     }
   }
