@@ -63,7 +63,7 @@ function Coronilla() {
     }
     return [prayer];
   });
-  const roundPrayer = bySlug("oracion-inicio-ronda");
+  const roundPrayer = bySlug("oracion-inicio-ronda") ?? bySlug("oracion-inicial-san-miguel");
   const roundPrayerBody = roundPrayer?.body?.trim() || SAN_MIGUEL_ROUND_PRAYER;
   const bead = bySlug("invocacion-cuenta");
   const gloria = bySlug("gloria-grupo");
