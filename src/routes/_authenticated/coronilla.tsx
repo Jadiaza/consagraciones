@@ -285,7 +285,7 @@ function Coronilla() {
           <button
             type="button"
             aria-label="Oración anterior"
-            disabled={guidedStep === 0}
+            disabled={guidedStep === 0 || isCounterStep}
             className="flex size-16 items-center justify-center rounded-full border border-primary/60 text-primary disabled:opacity-30"
             onClick={() => setGuidedStep((step) => Math.max(0, step - 1))}
           >
