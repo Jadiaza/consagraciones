@@ -14,6 +14,9 @@ import { prayersQuery } from "@/lib/consecration";
 
 type Modo = null | "interactiva" | "manual" | "audio";
 
+const SAN_MIGUEL_ROUND_PRAYER =
+  "San Miguel Arcángel, defiéndenos en la pelea. Sé nuestro amparo y refugio contra las asechanzas del demonio. ¡Reprímele, oh Dios, con voz imperiosa, como rendidamente te lo suplicamos! Y tú, Príncipe de las Milicias Celestiales, armado del poder divino, precipita al infierno a Satanás y a todos los espíritus malignos que, para la perdición de las almas, vagan por el mundo. Amén.";
+
 export const Route = createFileRoute("/_authenticated/coronilla")({ component: Coronilla });
 
 function Coronilla() {
@@ -61,6 +64,7 @@ function Coronilla() {
     return [prayer];
   });
   const roundPrayer = bySlug("oracion-inicio-ronda");
+  const roundPrayerBody = roundPrayer?.body?.trim() || SAN_MIGUEL_ROUND_PRAYER;
   const bead = bySlug("invocacion-cuenta");
   const gloria = bySlug("gloria-grupo");
   const guidedTotal = opening.length + 1 + guidedClosing.length;
@@ -165,7 +169,7 @@ function Coronilla() {
                 Al comenzar cada ronda
               </p>
               <p className="mt-2 whitespace-pre-line font-display text-lg leading-relaxed">
-                {roundPrayer?.body}
+                {roundPrayerBody}
               </p>
               <p className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 En cada una de las diez cuentas
@@ -253,7 +257,7 @@ function Coronilla() {
           {isCounterStep ? (
             <div className="surface-sacred rounded-3xl p-5">
               <RosaryCounter
-                groupPrayer={roundPrayer?.body ?? ""}
+                groupPrayer={roundPrayerBody}
                 invocation={bead?.body ?? "¿Quién como Dios?"}
                 response={bead?.response ?? "¡Nadie como Dios!"}
                 gloria={gloria?.body ?? ""}
