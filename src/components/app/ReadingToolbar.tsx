@@ -1,19 +1,10 @@
-import {
-  AlignJustify,
-  AlignLeft,
-  ALargeSmall,
-  CaseSensitive,
-  Minus,
-  Plus,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import { AlignJustify, AlignLeft, Check, Minus, Plus, RotateCcw, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 export type ReadingTheme = "dark" | "light" | "sepia";
-export type ReadingFont = "serif" | "sans";
+export type ReadingFont = "literata" | "georgia" | "garamond" | "atkinson" | "modern";
 export type ReadingAlign = "left" | "justify";
 export type ReadingSpacing = "compact" | "comfortable" | "spacious";
 
@@ -36,6 +27,32 @@ const spacingLabels: Record<ReadingSpacing, string> = {
   comfortable: "Cómodo",
   spacious: "Amplio",
 };
+
+const fontOptions: Array<{
+  value: ReadingFont;
+  label: string;
+  description: string;
+  recommended?: boolean;
+}> = [
+  {
+    value: "literata",
+    label: "Literata",
+    description: "Diseñada para lectura prolongada en pantalla",
+    recommended: true,
+  },
+  {
+    value: "georgia",
+    label: "Georgia",
+    description: "Clásica y clara incluso en tamaños pequeños",
+  },
+  { value: "garamond", label: "Garamond", description: "Elegancia editorial para textos extensos" },
+  {
+    value: "atkinson",
+    label: "Atkinson",
+    description: "Formas diferenciadas para máxima accesibilidad",
+  },
+  { value: "modern", label: "Moderna", description: "Trazos limpios y presentación contemporánea" },
+];
 
 export function ReadingToolbar({
   preferences,
@@ -141,23 +158,34 @@ export function ReadingToolbar({
             </div>
           )}
           {tab === "font" && (
-            <div className="reading-toolbar__choices">
-              <button
-                type="button"
-                className={cn(preferences.font === "serif" && "is-active")}
-                aria-pressed={preferences.font === "serif"}
-                onClick={() => update("font", "serif")}
-              >
-                <CaseSensitive aria-hidden /> Clásica
-              </button>
-              <button
-                type="button"
-                className={cn(preferences.font === "sans" && "is-active")}
-                aria-pressed={preferences.font === "sans"}
-                onClick={() => update("font", "sans")}
-              >
-                <ALargeSmall aria-hidden /> Moderna
-              </button>
+            <div className="reading-toolbar__font-list">
+              {fontOptions.map((font) => (
+                <button
+                  key={font.value}
+                  type="button"
+                  className={cn(
+                    "reading-toolbar__font-option",
+                    `reading-font-${font.value}`,
+                    preferences.font === font.value && "is-active",
+                  )}
+                  aria-pressed={preferences.font === font.value}
+                  onClick={() => update("font", font.value)}
+                >
+                  <span className="reading-toolbar__font-sample" aria-hidden>
+                    Aa
+                  </span>
+                  <span className="reading-toolbar__font-copy">
+                    <strong>{font.label}</strong>
+                    <small>{font.description}</small>
+                  </span>
+                  {font.recommended && (
+                    <span className="reading-toolbar__recommended">Recomendada</span>
+                  )}
+                  {preferences.font === font.value && (
+                    <Check className="reading-toolbar__font-check" aria-hidden />
+                  )}
+                </button>
+              ))}
             </div>
           )}
           {tab === "format" && (
