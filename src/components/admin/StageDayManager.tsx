@@ -15,6 +15,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { DayRelatedContentManager } from "@/components/admin/DayRelatedContentManager";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { StructuredContentEditor } from "@/components/admin/StructuredContentEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -289,7 +290,13 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
           }}
         >
           {mode === "stages" ? (
-            <StageForm form={stageForm} set={setStageForm} />
+            <StructuredContentEditor
+              value={stageForm}
+              onChange={setStageForm}
+              title="Editor estructurado de la etapa"
+            >
+              <StageForm form={stageForm} set={setStageForm} />
+            </StructuredContentEditor>
           ) : (
             <>
               <Tabs
@@ -506,13 +513,17 @@ function StageForm({
         <Input value={form.title} onChange={(e) => set({ ...form, title: e.target.value })} />
       </Field>
       <Field label="Lema">
-        <Input value={form.motto} onChange={(e) => set({ ...form, motto: e.target.value })} />
+        <RichTextEditor
+          rows={3}
+          value={form.motto}
+          onChange={(value) => set({ ...form, motto: value })}
+        />
       </Field>
       <Field label="Descripción">
-        <Textarea
+        <RichTextEditor
           rows={5}
           value={form.description}
-          onChange={(e) => set({ ...form, description: e.target.value })}
+          onChange={(value) => set({ ...form, description: value })}
         />
       </Field>
       <Field label="URL de imagen">
@@ -594,10 +605,10 @@ function DayForm({
           />
         </Field>
         <Field label="Lema">
-          <Textarea
+          <RichTextEditor
             rows={3}
             value={form.motto}
-            onChange={(event) => set({ ...form, motto: event.target.value })}
+            onChange={(value) => set({ ...form, motto: value })}
           />
         </Field>
       </div>

@@ -24,6 +24,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/cards";
 import { StageDayManager } from "@/components/admin/StageDayManager";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { StructuredContentEditor } from "@/components/admin/StructuredContentEditor";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -266,59 +268,66 @@ function AdminPage() {
               createConsecration.mutate();
             }}
           >
-            <Field label="Nombre">
-              <Input
-                value={newForm.title}
-                onChange={(e) => setNewForm({ ...newForm, title: e.target.value })}
-              />
-            </Field>
-            <Field label="Subtítulo">
-              <Input
-                value={newForm.subtitle}
-                onChange={(e) => setNewForm({ ...newForm, subtitle: e.target.value })}
-              />
-            </Field>
-            <Field label="Identificador">
-              <Input
-                placeholder="Se genera automáticamente"
-                value={newForm.slug}
-                onChange={(e) => setNewForm({ ...newForm, slug: e.target.value })}
-              />
-            </Field>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Duración">
+            <StructuredContentEditor
+              value={newForm}
+              onChange={setNewForm}
+              title="Editor estructurado de la consagración"
+              jsonRows={16}
+            >
+              <Field label="Nombre">
                 <Input
-                  type="number"
-                  min={1}
-                  value={newForm.duration_days}
-                  onChange={(e) =>
-                    setNewForm({ ...newForm, duration_days: Number(e.target.value) })
-                  }
+                  value={newForm.title}
+                  onChange={(e) => setNewForm({ ...newForm, title: e.target.value })}
                 />
               </Field>
-              <Field label="Estado">
-                <Select
-                  value={newForm.status}
-                  onValueChange={(status) => setNewForm({ ...newForm, status })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Borrador</SelectItem>
-                    <SelectItem value="published">Publicada</SelectItem>
-                    <SelectItem value="archived">Archivada</SelectItem>
-                  </SelectContent>
-                </Select>
+              <Field label="Subtítulo">
+                <Input
+                  value={newForm.subtitle}
+                  onChange={(e) => setNewForm({ ...newForm, subtitle: e.target.value })}
+                />
               </Field>
-            </div>
-            <Field label="Descripción">
-              <Textarea
-                rows={4}
-                value={newForm.description}
-                onChange={(e) => setNewForm({ ...newForm, description: e.target.value })}
-              />
-            </Field>
+              <Field label="Identificador">
+                <Input
+                  placeholder="Se genera automáticamente"
+                  value={newForm.slug}
+                  onChange={(e) => setNewForm({ ...newForm, slug: e.target.value })}
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Duración">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={newForm.duration_days}
+                    onChange={(e) =>
+                      setNewForm({ ...newForm, duration_days: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+                <Field label="Estado">
+                  <Select
+                    value={newForm.status}
+                    onValueChange={(status) => setNewForm({ ...newForm, status })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Borrador</SelectItem>
+                      <SelectItem value="published">Publicada</SelectItem>
+                      <SelectItem value="archived">Archivada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+              <Field label="Descripción">
+                <RichTextEditor
+                  rows={4}
+                  value={newForm.description}
+                  onChange={(value) => setNewForm({ ...newForm, description: value })}
+                />
+              </Field>
+            </StructuredContentEditor>
             <Button
               disabled={createConsecration.isPending}
               className="w-full bg-[#c99a3d] text-[#061426]"
@@ -378,7 +387,9 @@ function Sidebar({
             <ShieldCheck />
           </span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#f3c756]">Consagración</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#f3c756]">
+              Consagración
+            </p>
             <p className="font-display text-xl">33 días</p>
             <p className="text-[10px] text-[#c5d0db]">ADMINISTRADOR</p>
           </div>
@@ -387,7 +398,9 @@ function Sidebar({
           </button>
         </div>
         <nav className="flex-1 p-3">
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-[#aebbc8]">General</p>
+          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-[#aebbc8]">
+            General
+          </p>
           {links.slice(0, 2).map(Link)}
           <p className="mb-2 mt-6 px-3 text-[10px] font-semibold uppercase tracking-widest text-[#aebbc8]">
             Contenido
@@ -490,7 +503,10 @@ function Dashboard({
         <Panel
           title="Consagraciones"
           action={
-            <button onClick={() => go("consecrations")} className="text-xs font-semibold text-[#8a6200]">
+            <button
+              onClick={() => go("consecrations")}
+              className="text-xs font-semibold text-[#8a6200]"
+            >
               Ver todas
             </button>
           }
@@ -826,107 +842,114 @@ function ContentManager({ kind, consecrationId }: { kind: ContentKind; consecrat
             save.mutate();
           }}
         >
-          <Field label="Título">
-            <Input
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-            />
-          </Field>
-          {kind === "prayers" ? (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Identificador">
-                  <Input
-                    value={form.slug}
-                    onChange={(e) => setForm({ ...form, slug: e.target.value })}
+          <StructuredContentEditor
+            value={form}
+            onChange={setForm}
+            title={`Editor estructurado de ${kind === "prayers" ? "la oración" : "el recurso"}`}
+          >
+            <Field label="Título">
+              <Input
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
+            </Field>
+            {kind === "prayers" ? (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Identificador">
+                    <Input
+                      value={form.slug}
+                      onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Tipo">
+                    <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="prayer">Oración</SelectItem>
+                        <SelectItem value="opening">Inicial</SelectItem>
+                        <SelectItem value="closing">Final</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+                <Field label="Respuesta">
+                  <RichTextEditor
+                    rows={3}
+                    value={form.response}
+                    onChange={(value) => setForm({ ...form, response: value })}
                   />
                 </Field>
-                <Field label="Tipo">
-                  <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="prayer">Oración</SelectItem>
-                      <SelectItem value="opening">Inicial</SelectItem>
-                      <SelectItem value="closing">Final</SelectItem>
-                    </SelectContent>
-                  </Select>
+              </>
+            ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Categoría">
+                    <Select
+                      value={form.category}
+                      onValueChange={(v) => setForm({ ...form, category: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RESOURCE_CATEGORIES.map((c) => (
+                          <SelectItem key={c.key} value={c.key}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="Estado">
+                    <Select
+                      value={form.status}
+                      onValueChange={(v) => setForm({ ...form, status: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Borrador</SelectItem>
+                        <SelectItem value="published">Publicado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+                <Field label="Resumen">
+                  <RichTextEditor
+                    rows={2}
+                    value={form.summary}
+                    onChange={(value) => setForm({ ...form, summary: value })}
+                  />
                 </Field>
-              </div>
-              <Field label="Respuesta">
-                <Input
-                  value={form.response}
-                  onChange={(e) => setForm({ ...form, response: e.target.value })}
-                />
-              </Field>
-            </>
-          ) : (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Categoría">
-                  <Select
-                    value={form.category}
-                    onValueChange={(v) => setForm({ ...form, category: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {RESOURCE_CATEGORIES.map((c) => (
-                        <SelectItem key={c.key} value={c.key}>
-                          {c.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <Field label="Enlace externo">
+                  <Input
+                    type="url"
+                    value={form.external_url}
+                    onChange={(e) => setForm({ ...form, external_url: e.target.value })}
+                  />
                 </Field>
-                <Field label="Estado">
-                  <Select
-                    value={form.status}
-                    onValueChange={(v) => setForm({ ...form, status: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Borrador</SelectItem>
-                      <SelectItem value="published">Publicado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </div>
-              <Field label="Resumen">
-                <Textarea
-                  rows={2}
-                  value={form.summary}
-                  onChange={(e) => setForm({ ...form, summary: e.target.value })}
-                />
-              </Field>
-              <Field label="Enlace externo">
-                <Input
-                  type="url"
-                  value={form.external_url}
-                  onChange={(e) => setForm({ ...form, external_url: e.target.value })}
-                />
-              </Field>
-            </>
-          )}
-          <Field label="Contenido">
-            <Textarea
-              rows={12}
-              value={form.body}
-              onChange={(e) => setForm({ ...form, body: e.target.value })}
-            />
-          </Field>
-          <Field label="Orden">
-            <Input
-              className="w-28"
-              type="number"
-              value={form.sort_order}
-              onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
-            />
-          </Field>
+              </>
+            )}
+            <Field label="Contenido">
+              <RichTextEditor
+                rows={12}
+                value={form.body}
+                onChange={(value) => setForm({ ...form, body: value })}
+              />
+            </Field>
+            <Field label="Orden">
+              <Input
+                className="w-28"
+                type="number"
+                value={form.sort_order}
+                onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
+              />
+            </Field>
+          </StructuredContentEditor>
           <div className="flex justify-between">
             {selected ? (
               <Button
