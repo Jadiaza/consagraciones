@@ -633,19 +633,26 @@ html[data-app-theme="sepia"] {
     text-align: left;
   }
 
+  .reading-toolbar-modal {
+    align-items: center;
+    background: rgb(0 8 18 / 72%);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    position: fixed;
+    z-index: 60;
+  }
+
   .reading-toolbar {
     background: color-mix(in srgb, var(--reading-bg) 97%, black);
     border: 1px solid var(--reading-border);
+    border-radius: 1.5rem;
     box-shadow: 0 22px 55px rgb(0 0 0 / 38%);
     color: var(--reading-fg);
-    left: 50%;
-    max-height: calc(100dvh - 4rem);
+    max-height: min(42rem, calc(100dvh - 2rem));
     overflow-y: auto;
-    position: fixed;
-    top: calc(56px + env(safe-area-inset-top));
-    transform: translateX(-50%);
-    width: min(64rem, 100%);
-    z-index: 50;
+    width: min(34rem, 100%);
   }
 
   .reading-toolbar__topbar {
@@ -661,6 +668,12 @@ html[data-app-theme="sepia"] {
     font-size: 0.78rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+
+  .reading-toolbar__topbar p {
+    color: var(--reading-muted);
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
   }
 
   .reading-toolbar__topbar button {
@@ -1415,17 +1428,24 @@ html[data-app-theme="sepia"] {
       color: var(--reading-fg);
     }
 
-    .reading-toolbar__topbar {
-      display: none;
-    }
-
     .reading-toolbar__row {
       grid-template-columns: 1fr;
     }
 
     .reading-toolbar__panel {
-      max-height: 44dvh;
+      max-height: 52dvh;
       overflow-y: auto;
+    }
+
+    .reading-toolbar-modal {
+      align-items: flex-end;
+      padding: 0;
+    }
+
+    .reading-toolbar {
+      border-radius: 1.5rem 1.5rem 0 0;
+      max-height: calc(88dvh - env(safe-area-inset-top));
+      width: 100%;
     }
   }
 }
