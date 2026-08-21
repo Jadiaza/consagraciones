@@ -28,8 +28,29 @@ export function loadReadingPreferences(): ReadingPreferences {
   }
 }
 
+export function applyReadingPreferences(preferences: ReadingPreferences) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  for (const className of Array.from(root.classList)) {
+    if (
+      className.startsWith("reading-font-") ||
+      className.startsWith("reading-align-") ||
+      className.startsWith("reading-spacing-")
+    ) {
+      root.classList.remove(className);
+    }
+  }
+  root.classList.add(
+    `reading-font-${preferences.font}`,
+    `reading-align-${preferences.align}`,
+    `reading-spacing-${preferences.spacing}`,
+  );
+  root.style.setProperty("--app-reading-size", `${preferences.size}px`);
+}
+
 export function persistReadingPreferences(preferences: ReadingPreferences) {
   applyAppTheme(preferences.theme);
+  applyReadingPreferences(preferences);
   try {
     window.localStorage.setItem(READING_PREFERENCES_KEY, JSON.stringify(preferences));
   } catch {
