@@ -74,8 +74,7 @@ function Dashboard() {
             Día actual
           </p>
           <p className="mt-3 font-display text-[2.35rem] font-semibold leading-none drop-shadow-sm">
-            Día {currentDay}{" "}
-            <span className="text-xl font-normal text-white/80">de 33</span>
+            Día {currentDay}
           </p>
           <p className="mt-3 text-lg font-semibold leading-snug text-white drop-shadow-sm">
             {currentDayInfo?.title || "Continúa tu camino de consagración"}
