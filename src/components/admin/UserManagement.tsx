@@ -14,12 +14,25 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 type Mode = "users" | "activity";
+type AppRole = "user" | "companion" | "editor" | "admin";
 export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrationId?: string }) {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const data = useQuery({
     queryKey: ["admin-users", consecrationId],
     queryFn: async () => {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) throw authError ?? new Error("La sesión expiró");
+
+      const { data: currentRoles, error: currentRolesError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", auth.user.id);
+      if (currentRolesError) throw currentRolesError;
+      if (!currentRoles?.some(({ role }) => role === "admin")) {
+        throw new Error("Solo los administradores pueden consultar usuarios y actividad");
+      }
+
       const [p, e, d, c, r, s] = await Promise.all([
         supabase
           .from("profiles")
@@ -38,7 +51,7 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
         supabase.from("user_roles").select("user_id,role"),
         supabase.from("super_admins").select("user_id"),
       ]);
-      const error = [p, e, d, r].find((x) => x.error)?.error;
+      const error = [p, e, d, c, r, s].find((x) => x.error)?.error;
       if (error) throw error;
       return {
         profiles: p.data ?? [],
@@ -51,17 +64,11 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
     },
   });
   const changeRole = useMutation({
-    mutationFn: async ({
-      id,
-      role,
-    }: {
-      id: string;
-      role: "user" | "companion" | "editor" | "admin";
-    }) => {
-      const { error } = await (supabase.rpc as any)("super_admin_set_user_role", {
-        target_user: id,
-        next_role: role,
-      });
+    mutationFn: async ({ id, role }: { id: string; role: AppRole }) => {
+      const { error } = await supabase.rpc(
+        "super_admin_set_user_role" as never,
+        { target_user: id, next_role: role } as never,
+      );
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -94,23 +101,29 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
             superAdmin: data.data.superIds.has(p.id),
           };
         })
+        .filter((x) => !consecrationId || Boolean(x.enrollment))
         .filter((x) =>
           `${x.full_name} ${x.display_name}`.toLowerCase().includes(q.toLowerCase()),
         ) ?? [],
     [data.data, q, consecrationId],
   );
   if (data.isLoading) return <LoadingState />;
-  if (data.error)
-    return (
-      <ErrorState
-        message={`${data.error.message}. Aplica la migración 20260809140000 en Supabase.`}
-      />
+  if (data.error) return <ErrorState message={data.error.message} />;
+  if (mode === "activity") {
+    const selectedEnrollmentIds = new Set(
+      data
+        .data!.enrollments.filter((enrollment) =>
+          consecrationId ? enrollment.consecration_id === consecrationId : true,
+        )
+        .map((enrollment) => enrollment.id),
     );
-  if (mode === "activity")
+    const activity = data.data!.progress.filter((entry) =>
+      consecrationId ? selectedEnrollmentIds.has(entry.user_consecration_id) : true,
+    );
     return (
       <Panel title="Actividad reciente">
-        {data.data!.progress.length ? (
-          data.data!.progress.slice(0, 40).map((x) => {
+        {activity.length ? (
+          activity.slice(0, 40).map((x) => {
             const p = data.data!.profiles.find((v) => v.id === x.user_id);
             return (
               <div key={x.id} className="flex gap-3 border-b border-white/10 py-3">
@@ -126,10 +139,14 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
             );
           })
         ) : (
-          <EmptyState title="Sin actividad reciente" />
+          <EmptyState
+            title="Sin actividad reciente"
+            description="La actividad aparecerá cuando un usuario guarde o complete el avance de un día."
+          />
         )}
       </Panel>
     );
+  }
   return (
     <Panel
       title="Usuarios e inscripciones"
@@ -166,7 +183,9 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
                     <span>
                       {x.display_name || x.full_name || "Sin nombre"}
                       {x.superAdmin && (
-                        <small className="block font-medium text-[#8a6200]">Superadministrador</small>
+                        <small className="block font-medium text-[#8a6200]">
+                          Superadministrador
+                        </small>
                       )}
                     </span>
                   </span>
@@ -183,7 +202,9 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
                   ) : (
                     <Select
                       value={x.role}
-                      onValueChange={(role) => changeRole.mutate({ id: x.id, role: role as any })}
+                      onValueChange={(role) =>
+                        changeRole.mutate({ id: x.id, role: role as AppRole })
+                      }
                     >
                       <SelectTrigger className="h-8 w-32">
                         <SelectValue />
@@ -201,6 +222,16 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
             ))}
           </tbody>
         </table>
+        {!rows.length && (
+          <EmptyState
+            title={consecrationId ? "No hay usuarios inscritos" : "No hay usuarios registrados"}
+            description={
+              consecrationId
+                ? "Todavía no hay inscripciones para la consagración seleccionada."
+                : "Los usuarios aparecerán aquí cuando creen su cuenta."
+            }
+          />
+        )}
       </div>
     </Panel>
   );
