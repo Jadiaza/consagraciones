@@ -1,29 +1,30 @@
-# Welcome to your Lovable project
+# Consagraciones
 
-This project was built with [Lovable](https://lovable.dev).
+PWA católica para el itinerario de Consagración de 33 días a los Santos Arcángeles.
 
-## Build with Lovable
+## Arquitectura
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- React, TypeScript y TanStack Start.
+- Supabase para autenticación, PostgreSQL y RLS.
+- Nitro con preset de Vercel para SSR y despliegue.
+- Cloudflare R2 preparado como proveedor de multimedia.
 
 ## Development
 
 Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+git clone https://github.com/Jadiaza/consagraciones.git
+cd consagraciones
+npm install
 npm run dev
 ```
 
-## Built with
+Variables públicas requeridas:
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+```env
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
+
+Las credenciales privilegiadas de Supabase nunca deben exponerse con el prefijo `VITE_`.
