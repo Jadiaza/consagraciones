@@ -417,6 +417,16 @@ html[data-app-theme="sepia"] {
     color-scheme: light;
   }
 
+  .reading-theme-dark {
+    --reading-bg: #0b1d31;
+    --reading-fg: #f7f2e7;
+    --reading-muted: #b8c4d2;
+    --reading-card: #112d49;
+    --reading-border: rgb(226 184 94 / 30%);
+    --reading-accent: #e2b85e;
+    color-scheme: dark;
+  }
+
   .reading-theme-sepia {
     --reading-bg: #f4e5c5;
     --reading-fg: #382a1c;
@@ -427,12 +437,36 @@ html[data-app-theme="sepia"] {
     color-scheme: light;
   }
 
-  .reading-font-serif {
+  .reading-font-literata {
+    font-family: Literata, Georgia, "Times New Roman", serif;
+  }
+
+  .reading-font-georgia {
     font-family: Georgia, "Times New Roman", serif;
   }
 
-  .reading-font-sans {
-    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  .reading-font-garamond {
+    font-family: "EB Garamond", Garamond, Georgia, serif;
+  }
+
+  .reading-font-atkinson {
+    font-family: "Atkinson Hyperlegible", Arial, sans-serif;
+  }
+
+  .reading-font-modern {
+    font-family: Karla, ui-sans-serif, system-ui, sans-serif;
+  }
+
+  html[class*="reading-font-"] body,
+  html[class*="reading-font-"] button,
+  html[class*="reading-font-"] input,
+  html[class*="reading-font-"] textarea,
+  html[class*="reading-font-"] select {
+    font-family: inherit;
+  }
+
+  html[class*="reading-font-"] .app-shell main {
+    font-size: var(--app-reading-size, 17px);
   }
 
   .reading-align-left .sacred-text p,
@@ -633,19 +667,30 @@ html[data-app-theme="sepia"] {
     text-align: left;
   }
 
+  .reading-toolbar-modal {
+    align-items: center;
+    background: rgb(0 8 18 / 72%);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    position: fixed;
+    z-index: 60;
+  }
+
   .reading-toolbar {
     background: color-mix(in srgb, var(--reading-bg) 97%, black);
     border: 1px solid var(--reading-border);
+    border-radius: 1.5rem;
     box-shadow: 0 22px 55px rgb(0 0 0 / 38%);
     color: var(--reading-fg);
-    left: 50%;
-    max-height: calc(100dvh - 4rem);
+    max-height: min(42rem, calc(100dvh - 2rem));
     overflow-y: auto;
-    position: fixed;
-    top: calc(56px + env(safe-area-inset-top));
-    transform: translateX(-50%);
-    width: min(64rem, 100%);
-    z-index: 50;
+    width: min(34rem, 100%);
+  }
+
+  .reading-toolbar button {
+    background: transparent;
   }
 
   .reading-toolbar__topbar {
@@ -653,14 +698,20 @@ html[data-app-theme="sepia"] {
     display: flex;
     font-family: ui-sans-serif, system-ui, sans-serif;
     justify-content: space-between;
-    min-height: 3rem;
-    padding: 0.35rem 0.75rem 0.35rem 1rem;
+    min-height: 3.6rem;
+    padding: 0.55rem 0.75rem 0.55rem 1rem;
   }
 
   .reading-toolbar__topbar strong {
     font-size: 0.78rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+
+  .reading-toolbar__topbar p {
+    color: var(--reading-muted);
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
   }
 
   .reading-toolbar__topbar button {
@@ -682,7 +733,7 @@ html[data-app-theme="sepia"] {
     border-bottom: 2px solid transparent;
     color: var(--reading-muted);
     font-family: ui-sans-serif, system-ui, sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 700;
     min-height: 2.85rem;
   }
@@ -703,12 +754,78 @@ html[data-app-theme="sepia"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .reading-toolbar__font-list {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .reading-toolbar__font-option {
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 0.9rem;
+    color: var(--reading-fg);
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: 2rem minmax(0, 1fr) auto auto;
+    min-height: 3.45rem;
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    width: 100%;
+  }
+
+  .reading-toolbar__font-option:hover {
+    background: color-mix(in srgb, var(--reading-card) 58%, transparent);
+  }
+
+  .reading-toolbar__font-option.is-active {
+    background: color-mix(in srgb, var(--reading-card) 78%, var(--reading-bg));
+    border-color: var(--reading-accent);
+  }
+
+  .reading-toolbar__font-sample {
+    color: var(--reading-accent);
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .reading-toolbar__font-copy {
+    display: grid;
+    min-width: 0;
+  }
+
+  .reading-toolbar__font-copy strong {
+    font-size: 0.82rem;
+    line-height: 1.2;
+  }
+
+  .reading-toolbar__font-copy small {
+    color: var(--reading-muted);
+    font-family: Karla, ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.65rem;
+    line-height: 1.25;
+    margin-top: 0.12rem;
+  }
+
+  .reading-toolbar__recommended {
+    background: color-mix(in srgb, var(--reading-accent) 16%, transparent);
+    border-radius: 999px;
+    color: var(--reading-accent);
+    font-family: Karla, ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.55rem;
+    padding: 0.2rem 0.42rem;
+  }
+
+  .reading-toolbar__font-check {
+    color: var(--reading-accent);
+  }
+
   .reading-toolbar__choices > button,
   .reading-toolbar__reset,
   .reading-toolbar__stepper button {
     align-items: center;
     border: 1px solid var(--reading-border);
     border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--reading-card) 42%, transparent);
     color: var(--reading-muted);
     display: inline-flex;
     font-family: ui-sans-serif, system-ui, sans-serif;
@@ -724,6 +841,7 @@ html[data-app-theme="sepia"] {
   .reading-toolbar__choices > button.is-active,
   .reading-toolbar__reset:hover {
     border-color: var(--reading-accent);
+    background: color-mix(in srgb, var(--reading-card) 78%, var(--reading-bg));
     color: var(--reading-accent);
   }
 
@@ -1415,17 +1533,24 @@ html[data-app-theme="sepia"] {
       color: var(--reading-fg);
     }
 
-    .reading-toolbar__topbar {
-      display: none;
-    }
-
     .reading-toolbar__row {
       grid-template-columns: 1fr;
     }
 
     .reading-toolbar__panel {
-      max-height: 44dvh;
+      max-height: 52dvh;
       overflow-y: auto;
+    }
+
+    .reading-toolbar-modal {
+      align-items: flex-start;
+      padding: calc(4.4rem + env(safe-area-inset-top)) 0.75rem 0.75rem;
+    }
+
+    .reading-toolbar {
+      border-radius: 1.35rem;
+      max-height: calc(100dvh - 5.2rem - env(safe-area-inset-top));
+      width: 100%;
     }
   }
 }

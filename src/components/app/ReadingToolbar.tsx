@@ -1,19 +1,10 @@
-import {
-  AlignJustify,
-  AlignLeft,
-  ALargeSmall,
-  CaseSensitive,
-  Minus,
-  Plus,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import { AlignJustify, AlignLeft, Check, Minus, Plus, RotateCcw, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 export type ReadingTheme = "dark" | "light" | "sepia";
-export type ReadingFont = "serif" | "sans";
+export type ReadingFont = "literata" | "georgia" | "garamond" | "atkinson" | "modern";
 export type ReadingAlign = "left" | "justify";
 export type ReadingSpacing = "compact" | "comfortable" | "spacious";
 
@@ -37,6 +28,32 @@ const spacingLabels: Record<ReadingSpacing, string> = {
   spacious: "Amplio",
 };
 
+const fontOptions: Array<{
+  value: ReadingFont;
+  label: string;
+  description: string;
+  recommended?: boolean;
+}> = [
+  {
+    value: "literata",
+    label: "Literata",
+    description: "Diseñada para lectura prolongada en pantalla",
+    recommended: true,
+  },
+  {
+    value: "georgia",
+    label: "Georgia",
+    description: "Clásica y clara incluso en tamaños pequeños",
+  },
+  { value: "garamond", label: "Garamond", description: "Elegancia editorial para textos extensos" },
+  {
+    value: "atkinson",
+    label: "Atkinson",
+    description: "Formas diferenciadas para máxima accesibilidad",
+  },
+  { value: "modern", label: "Moderna", description: "Trazos limpios y presentación contemporánea" },
+];
+
 export function ReadingToolbar({
   preferences,
   onChange,
@@ -54,6 +71,8 @@ export function ReadingToolbar({
     onChange({ ...preferences, [key]: value });
 
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const closeOutside = (event: PointerEvent) => {
       const target = event.target as Node;
       if (toolbarRef.current?.contains(target)) return;
@@ -66,148 +85,178 @@ export function ReadingToolbar({
     document.addEventListener("pointerdown", closeOutside);
     document.addEventListener("keydown", closeWithEscape);
     return () => {
+      document.body.style.overflow = previousOverflow;
       document.removeEventListener("pointerdown", closeOutside);
       document.removeEventListener("keydown", closeWithEscape);
     };
   }, [onClose]);
 
   return (
-    <aside ref={toolbarRef} className="reading-toolbar" aria-label="Preferencias de lectura">
-      <div className="reading-toolbar__topbar">
-        <strong>Preferencias de lectura</strong>
-        <button type="button" aria-label="Cerrar preferencias" onClick={onClose}>
-          <X aria-hidden />
-        </button>
-      </div>
-      <div className="reading-toolbar__tabs" role="tablist" aria-label="Opciones de lectura">
-        {(
-          [
-            ["theme", "Temas"],
-            ["font", "Fuente"],
-            ["format", "Formato"],
-            ["more", "Más"],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={tab === value}
-            className={cn(tab === value && "is-active")}
-            onClick={() => setTab(value)}
-          >
-            {label}
+    <div
+      className={cn(
+        "reading-toolbar-modal",
+        `reading-theme-${preferences.theme}`,
+        `reading-font-${preferences.font}`,
+      )}
+      role="presentation"
+    >
+      <aside
+        ref={toolbarRef}
+        className="reading-toolbar"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reading-preferences-title"
+      >
+        <div className="reading-toolbar__topbar">
+          <div>
+            <strong id="reading-preferences-title">Formato de la aplicación</strong>
+            <p>Personaliza el tema y la lectura</p>
+          </div>
+          <button type="button" aria-label="Cerrar preferencias" onClick={onClose}>
+            <X aria-hidden />
           </button>
-        ))}
-      </div>
-      <div className="reading-toolbar__panel" role="tabpanel">
-        {tab === "theme" && (
-          <div className="reading-toolbar__choices reading-toolbar__themes">
-            {(Object.keys(themeLabels) as ReadingTheme[]).map((theme) => (
-              <button
-                key={theme}
-                type="button"
-                className={cn(preferences.theme === theme && "is-active")}
-                aria-pressed={preferences.theme === theme}
-                onClick={() => update("theme", theme)}
-              >
-                <span
-                  className={`reading-theme-swatch reading-theme-swatch--${theme}`}
-                  aria-hidden
-                />
-                {themeLabels[theme]}
-              </button>
-            ))}
-          </div>
-        )}
-        {tab === "font" && (
-          <div className="reading-toolbar__choices">
+        </div>
+        <div className="reading-toolbar__tabs" role="tablist" aria-label="Opciones de lectura">
+          {(
+            [
+              ["theme", "Temas"],
+              ["font", "Fuente"],
+              ["format", "Formato"],
+              ["more", "Más"],
+            ] as const
+          ).map(([value, label]) => (
             <button
+              key={value}
               type="button"
-              className={cn(preferences.font === "serif" && "is-active")}
-              aria-pressed={preferences.font === "serif"}
-              onClick={() => update("font", "serif")}
+              role="tab"
+              aria-selected={tab === value}
+              className={cn(tab === value && "is-active")}
+              onClick={() => setTab(value)}
             >
-              <CaseSensitive aria-hidden /> Clásica
+              {label}
             </button>
-            <button
-              type="button"
-              className={cn(preferences.font === "sans" && "is-active")}
-              aria-pressed={preferences.font === "sans"}
-              onClick={() => update("font", "sans")}
-            >
-              <ALargeSmall aria-hidden /> Moderna
-            </button>
-          </div>
-        )}
-        {tab === "format" && (
-          <div className="reading-toolbar__settings">
-            <div className="reading-toolbar__row">
-              <span>Tamaño</span>
-              <div className="reading-toolbar__stepper">
+          ))}
+        </div>
+        <div className="reading-toolbar__panel" role="tabpanel">
+          {tab === "theme" && (
+            <div className="reading-toolbar__choices reading-toolbar__themes">
+              {(Object.keys(themeLabels) as ReadingTheme[]).map((theme) => (
                 <button
+                  key={theme}
                   type="button"
-                  aria-label="Reducir tamaño"
-                  disabled={preferences.size <= 15}
-                  onClick={() => update("size", Math.max(15, preferences.size - 1))}
+                  className={cn(preferences.theme === theme && "is-active")}
+                  aria-pressed={preferences.theme === theme}
+                  onClick={() => update("theme", theme)}
                 >
-                  <Minus />
+                  <span
+                    className={`reading-theme-swatch reading-theme-swatch--${theme}`}
+                    aria-hidden
+                  />
+                  {themeLabels[theme]}
                 </button>
-                <strong>{preferences.size}</strong>
-                <button
-                  type="button"
-                  aria-label="Aumentar tamaño"
-                  disabled={preferences.size >= 24}
-                  onClick={() => update("size", Math.min(24, preferences.size + 1))}
-                >
-                  <Plus />
-                </button>
-              </div>
+              ))}
             </div>
-            <div className="reading-toolbar__row">
-              <span>Alineación</span>
-              <div className="reading-toolbar__choices">
+          )}
+          {tab === "font" && (
+            <div className="reading-toolbar__font-list">
+              {fontOptions.map((font) => (
                 <button
+                  key={font.value}
                   type="button"
-                  className={cn(preferences.align === "left" && "is-active")}
-                  onClick={() => update("align", "left")}
+                  className={cn(
+                    "reading-toolbar__font-option",
+                    `reading-font-${font.value}`,
+                    preferences.font === font.value && "is-active",
+                  )}
+                  aria-pressed={preferences.font === font.value}
+                  onClick={() => update("font", font.value)}
                 >
-                  <AlignLeft /> Izquierda
+                  <span className="reading-toolbar__font-sample" aria-hidden>
+                    Aa
+                  </span>
+                  <span className="reading-toolbar__font-copy">
+                    <strong>{font.label}</strong>
+                    <small>{font.description}</small>
+                  </span>
+                  {font.recommended && (
+                    <span className="reading-toolbar__recommended">Recomendada</span>
+                  )}
+                  {preferences.font === font.value && (
+                    <Check className="reading-toolbar__font-check" aria-hidden />
+                  )}
                 </button>
-                <button
-                  type="button"
-                  className={cn(preferences.align === "justify" && "is-active")}
-                  onClick={() => update("align", "justify")}
-                >
-                  <AlignJustify /> Justificada
-                </button>
-              </div>
+              ))}
             </div>
-          </div>
-        )}
-        {tab === "more" && (
-          <div className="reading-toolbar__settings">
-            <div className="reading-toolbar__row">
-              <span>Interlineado</span>
-              <div className="reading-toolbar__choices">
-                {(Object.keys(spacingLabels) as ReadingSpacing[]).map((spacing) => (
+          )}
+          {tab === "format" && (
+            <div className="reading-toolbar__settings">
+              <div className="reading-toolbar__row">
+                <span>Tamaño</span>
+                <div className="reading-toolbar__stepper">
                   <button
-                    key={spacing}
                     type="button"
-                    className={cn(preferences.spacing === spacing && "is-active")}
-                    onClick={() => update("spacing", spacing)}
+                    aria-label="Reducir tamaño"
+                    disabled={preferences.size <= 15}
+                    onClick={() => update("size", Math.max(15, preferences.size - 1))}
                   >
-                    {spacingLabels[spacing]}
+                    <Minus />
                   </button>
-                ))}
+                  <strong>{preferences.size}</strong>
+                  <button
+                    type="button"
+                    aria-label="Aumentar tamaño"
+                    disabled={preferences.size >= 24}
+                    onClick={() => update("size", Math.min(24, preferences.size + 1))}
+                  >
+                    <Plus />
+                  </button>
+                </div>
+              </div>
+              <div className="reading-toolbar__row">
+                <span>Alineación</span>
+                <div className="reading-toolbar__choices">
+                  <button
+                    type="button"
+                    className={cn(preferences.align === "left" && "is-active")}
+                    onClick={() => update("align", "left")}
+                  >
+                    <AlignLeft /> Izquierda
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(preferences.align === "justify" && "is-active")}
+                    onClick={() => update("align", "justify")}
+                  >
+                    <AlignJustify /> Justificada
+                  </button>
+                </div>
               </div>
             </div>
-            <button type="button" className="reading-toolbar__reset" onClick={onReset}>
-              <RotateCcw aria-hidden /> Restablecer preferencias
-            </button>
-          </div>
-        )}
-      </div>
-    </aside>
+          )}
+          {tab === "more" && (
+            <div className="reading-toolbar__settings">
+              <div className="reading-toolbar__row">
+                <span>Interlineado</span>
+                <div className="reading-toolbar__choices">
+                  {(Object.keys(spacingLabels) as ReadingSpacing[]).map((spacing) => (
+                    <button
+                      key={spacing}
+                      type="button"
+                      className={cn(preferences.spacing === spacing && "is-active")}
+                      onClick={() => update("spacing", spacing)}
+                    >
+                      {spacingLabels[spacing]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button type="button" className="reading-toolbar__reset" onClick={onReset}>
+                <RotateCcw aria-hidden /> Restablecer preferencias
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+    </div>
   );
 }

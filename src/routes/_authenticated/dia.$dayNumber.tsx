@@ -36,19 +36,16 @@ import {
   nextAvailableDay,
 } from "@/lib/consecration";
 import { MediaService } from "@/lib/media-service";
-import { applyAppTheme, READING_PREFERENCES_KEY } from "@/lib/app-theme";
+import { applyAppTheme } from "@/lib/app-theme";
+import {
+  DEFAULT_READING_PREFERENCES,
+  loadReadingPreferences,
+  persistReadingPreferences,
+} from "@/lib/reading-preferences";
 import { cn } from "@/lib/utils";
 import "@/styles/day-modal-flow.css";
 
 export const Route = createFileRoute("/_authenticated/dia/$dayNumber")({ component: DiaPage });
-
-const DEFAULT_READING_PREFERENCES: ReadingPreferences = {
-  size: 17,
-  theme: "dark",
-  font: "serif",
-  align: "left",
-  spacing: "comfortable",
-};
 
 function DiaPage() {
   const { dayNumber } = Route.useParams();
@@ -72,16 +69,9 @@ function DiaPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(READING_PREFERENCES_KEY);
-      if (saved) {
-        const next = { ...DEFAULT_READING_PREFERENCES, ...JSON.parse(saved) };
-        setPreferences(next);
-        applyAppTheme(next.theme);
-      }
-    } catch {
-      // Keep safe defaults when storage is unavailable or contains invalid data.
-    }
+    const next = loadReadingPreferences();
+    setPreferences(next);
+    applyAppTheme(next.theme);
   }, []);
 
   useEffect(() => {
@@ -92,12 +82,7 @@ function DiaPage() {
 
   const savePreferences = (next: ReadingPreferences) => {
     setPreferences(next);
-    applyAppTheme(next.theme);
-    try {
-      window.localStorage.setItem(READING_PREFERENCES_KEY, JSON.stringify(next));
-    } catch {
-      // Reading preferences remain active for the current session.
-    }
+    persistReadingPreferences(next);
   };
 
   const resetPreferences = () => savePreferences(DEFAULT_READING_PREFERENCES);

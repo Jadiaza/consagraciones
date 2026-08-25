@@ -86,17 +86,22 @@ export function RosaryCounter({
       {phase === "group-prayer" ? (
         <div className="mt-6 w-full text-center">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            Oración de inicio de la ronda
+            Oración a San Miguel Arcángel
           </p>
-          <p className="mt-4 whitespace-pre-line font-display text-xl leading-relaxed">
+          <p className="mx-auto mt-3 max-w-md whitespace-pre-line text-left text-base leading-6">
             {groupPrayer}
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {bead > 0
+              ? `Después de rezar esta oración, continúa con la cuenta ${bead + 1} de diez.`
+              : "Después de rezar esta oración, continúa con la primera de las diez cuentas."}
           </p>
           <Button
             className="mt-6 h-14 w-full text-base"
             size="lg"
             onClick={() => setPhase("beads")}
           >
-            Comenzar las diez cuentas
+            {bead > 0 ? `Continuar en la cuenta ${bead + 1}` : "Ir a las cuentas"}
           </Button>
         </div>
       ) : phase === "beads" ? (

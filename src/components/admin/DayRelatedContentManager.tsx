@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { StructuredContentEditor } from "@/components/admin/StructuredContentEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -294,10 +295,7 @@ function RelatedEditor({
   };
 
   return (
-    <details
-      defaultOpen={defaultOpen}
-      className="rounded-xl border border-slate-200 bg-[#f8fafc]"
-    >
+    <details defaultOpen={defaultOpen} className="rounded-xl border border-slate-200 bg-[#f8fafc]">
       <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-[#111827]">
         {config.title}{" "}
         <span className="ml-2 text-xs text-white/45">({query.data?.length ?? 0})</span>
@@ -308,7 +306,9 @@ function RelatedEditor({
             <Plus /> Nuevo
           </Button>
           {query.isLoading && <p className="text-sm text-white/55">Cargando…</p>}
-          {query.error && <p className="text-sm font-medium text-red-700">{readMessage(query.error)}</p>}
+          {query.error && (
+            <p className="text-sm font-medium text-red-700">{readMessage(query.error)}</p>
+          )}
           {query.data?.map((row) => (
             <button
               key={String(row.id)}
@@ -322,14 +322,21 @@ function RelatedEditor({
           ))}
         </div>
         <div className="space-y-3">
-          {config.fields.map((field) => (
-            <EditorField
-              key={field.key}
-              field={field}
-              value={form[field.key]}
-              setValue={(value) => setForm({ ...form, [field.key]: value })}
-            />
-          ))}
+          <StructuredContentEditor
+            value={form}
+            onChange={setForm}
+            title={`Editor estructurado de ${config.singular}`}
+            jsonRows={16}
+          >
+            {config.fields.map((field) => (
+              <EditorField
+                key={field.key}
+                field={field}
+                value={form[field.key]}
+                setValue={(value) => setForm({ ...form, [field.key]: value })}
+              />
+            ))}
+          </StructuredContentEditor>
           <div className="flex justify-between pt-2">
             {selectedId ? (
               <Button type="button" variant="destructive" disabled={busy} onClick={remove}>
