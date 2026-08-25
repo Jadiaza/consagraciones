@@ -33,7 +33,7 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
         throw new Error("Solo los administradores pueden consultar usuarios y actividad");
       }
 
-      const [p, e, d, c, r, s] = await Promise.all([
+      const [p, e, d, c, r] = await Promise.all([
         supabase
           .from("profiles")
           .select("id,full_name,display_name,community,created_at")
@@ -49,9 +49,8 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
           .limit(300),
         supabase.from("consecrations").select("id,title,duration_days"),
         supabase.from("user_roles").select("user_id,role"),
-        supabase.from("super_admins").select("user_id"),
       ]);
-      const error = [p, e, d, c, r, s].find((x) => x.error)?.error;
+      const error = [p, e, d, c, r].find((x) => x.error)?.error;
       if (error) throw error;
       return {
         profiles: p.data ?? [],
@@ -59,7 +58,9 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
         progress: d.data ?? [],
         consecrations: c.data ?? [],
         roles: r.data ?? [],
-        superIds: new Set((s.data ?? []).map((x) => x.user_id)),
+        // `super_admins` was introduced after the first production schema.
+        // Role management still validates super-admin access in the database RPC.
+        superIds: new Set<string>(),
       };
     },
   });
