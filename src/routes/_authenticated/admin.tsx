@@ -20,7 +20,7 @@ import {
   Users,
   Activity,
 } from "lucide-react";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/cards";
 import { StageDayManager } from "@/components/admin/StageDayManager";
@@ -40,6 +40,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { RESOURCE_CATEGORIES } from "@/lib/consecration";
+
+const ActivityReport = lazy(() =>
+  import("@/components/admin/ActivityReport").then(({ ActivityReport }) => ({
+    default: ActivityReport,
+  })),
+);
 
 type Section =
   | "dashboard"
@@ -249,10 +255,12 @@ function AdminPage() {
             <StageDayManager mode="days" consecrationId={selectedId} />
           )}{" "}
           {section === "users" && (
-            <UserManagement mode="users" consecrationId={selectedId || undefined} />
+            <UserManagement mode="users" {...(selectedId ? { consecrationId: selectedId } : {})} />
           )}
           {section === "activity" && (
-            <UserManagement mode="activity" consecrationId={selectedId || undefined} />
+            <Suspense fallback={<LoadingState />}>
+              <ActivityReport {...(selectedId ? { consecrationId: selectedId } : {})} />
+            </Suspense>
           )}
           {(section === "prayers" || section === "resources") && selectedId && (
             <ContentManager kind={section} consecrationId={selectedId} />
@@ -350,7 +358,7 @@ const titles: Record<Section, string> = {
   prayers: "Gestión de oraciones",
   resources: "Gestión de recursos",
   users: "Usuarios e inscripciones",
-  activity: "Actividad reciente",
+  activity: "Seguimiento de actividad",
 };
 function Sidebar({
   open,

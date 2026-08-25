@@ -936,7 +936,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_user_progress_summary: {
+        Row: {
+          completed_days: number | null
+          completed_last_7d: number | null
+          consecration_id: string | null
+          consecration_title: string | null
+          community: string | null
+          current_day: number | null
+          duration_days: number | null
+          enrollment_id: string | null
+          enrollment_status: string | null
+          expected_end_date: string | null
+          last_activity_at: string | null
+          progress_percent: number | null
+          start_date: string | null
+          tracking_status: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
