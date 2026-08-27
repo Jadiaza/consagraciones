@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ConocerRouteImport } from './routes/conocer'
 import { Route as RecursosRouteImport } from './routes/recursos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCoronillaRouteImport } from './routes/_authenticated/coronilla'
@@ -35,6 +36,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConocerRoute = ConocerRouteImport.update({
+  id: '/conocer',
+  path: '/conocer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecursosRoute = RecursosRouteImport.update({
@@ -92,6 +98,7 @@ const AuthenticatedDiaDayNumberRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/conocer': typeof ConocerRoute
   '/recursos': typeof RecursosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/coronilla': typeof AuthenticatedCoronillaRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/conocer': typeof ConocerRoute
   '/recursos': typeof RecursosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/coronilla': typeof AuthenticatedCoronillaRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/conocer': typeof ConocerRoute
   '/recursos': typeof RecursosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/coronilla': typeof AuthenticatedCoronillaRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/conocer'
     | '/recursos'
     | '/admin'
     | '/coronilla'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/conocer'
     | '/recursos'
     | '/admin'
     | '/coronilla'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/conocer'
     | '/recursos'
     | '/_authenticated/admin'
     | '/_authenticated/coronilla'
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  ConocerRoute: typeof ConocerRoute
   RecursosRoute: typeof RecursosRoute
 }
 
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conocer': {
+      id: '/conocer'
+      path: '/conocer'
+      fullPath: '/conocer'
+      preLoaderRoute: typeof ConocerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recursos': {
@@ -321,6 +341,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  ConocerRoute: ConocerRoute,
   RecursosRoute: RecursosRoute,
 }
 export const routeTree = rootRouteImport

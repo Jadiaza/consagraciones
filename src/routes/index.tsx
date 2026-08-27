@@ -135,7 +135,7 @@ function Bienvenida() {
               Iniciar sesión
             </Link>
             <Link
-              to="/recursos"
+              to="/conocer"
               className="mx-auto flex min-h-11 items-center gap-2 px-3 text-sm text-[#f7f2e7]/80 transition hover:text-[#e4bd68] focus-visible:rounded focus-visible:outline-2 focus-visible:outline-[#f5d991]"
             >
               Conocer la consagración <ArrowRight className="size-4" aria-hidden />
