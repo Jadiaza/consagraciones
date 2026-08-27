@@ -35,7 +35,14 @@ function ResetPassword() {
       const parsed = z.string().min(8, "La contraseña debe tener al menos 8 caracteres.").max(72).safeParse(password);
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message);
       if (password !== confirm) throw new Error("Las contraseñas no coinciden.");
-      const { error } = await supabase.auth.updateUser({ password });
+      const { data: currentUser } = await supabase.auth.getUser();
+      const { error } = await supabase.auth.updateUser({
+        password,
+        data: {
+          ...(currentUser.user?.user_metadata ?? {}),
+          must_change_password: false,
+        },
+      });
       if (error) throw error;
       toast.success("Contraseña actualizada.");
       void navigate({ to: "/dashboard", replace: true });
