@@ -55,6 +55,10 @@ function AuthPage() {
 
   useEffect(() => {
     if (!session?.user) return;
+    if (session.user.user_metadata?.must_change_password === true) {
+      void navigate({ to: "/auth/reset-password", replace: true });
+      return;
+    }
     let active = true;
     void supabase
       .from("user_roles")
@@ -129,6 +133,10 @@ function AuthPage() {
         password,
       });
       if (error) throw error;
+      if (login.user.user_metadata?.must_change_password === true) {
+        void navigate({ to: "/auth/reset-password", replace: true });
+        return;
+      }
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
