@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app/AppShell";
+import { AccountSettings } from "@/components/app/AccountSettings";
 import { ReadingToolbar, type ReadingPreferences } from "@/components/app/ReadingToolbar";
 import { EmptyState, ProgressCard, SectionTitle } from "@/components/app/cards";
 import { Button } from "@/components/ui/button";
@@ -118,6 +119,7 @@ function Perfil() {
       <div className="surface-sacred rounded-2xl p-4">
         <p className="font-display text-lg">{displayName}</p>
         <p className="text-sm text-muted-foreground">Mensajero de San Miguel</p>
+        {user && <AccountSettings user={user} />}
         {mine && (
           <p className="mt-2 text-xs text-muted-foreground">
             Inicio: {formatLongDate(mine.start_date)} · Finalización prevista:{" "}
