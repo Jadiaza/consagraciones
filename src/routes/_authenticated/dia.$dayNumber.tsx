@@ -81,9 +81,17 @@ function DiaPage() {
   }, []);
 
   useEffect(() => {
-    setShowMobileSummary(window.matchMedia("(max-width: 640px)").matches);
+    const isMobile = window.matchMedia("(max-width: 640px)").matches;
+    setShowMobileSummary(isMobile && !section);
     setShowMobileSections(false);
     setActiveSection(section ?? "inicio");
+    if (section) {
+      window.requestAnimationFrame(() => {
+        document
+          .getElementById(`panel-${section}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }, [n, section]);
 
   const savePreferences = (next: ReadingPreferences) => {
@@ -600,7 +608,7 @@ function DiaPage() {
                 </>
               )}
               <SectionTitle>8.1 · Coronilla de San Miguel</SectionTitle>
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild className="w-full shadow-md">
                 <Link to="/coronilla" search={{ returnDay: n }}>
                   Rezar la Coronilla
                 </Link>
