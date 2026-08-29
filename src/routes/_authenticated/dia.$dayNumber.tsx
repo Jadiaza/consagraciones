@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  CircleDotDashed,
   Layers3,
   Lock,
   SlidersHorizontal,
@@ -608,8 +609,9 @@ function DiaPage() {
                 </>
               )}
               <SectionTitle>8.1 · Coronilla de San Miguel</SectionTitle>
-              <Button asChild className="w-full shadow-md">
+              <Button asChild className="h-14 w-full gap-3 rounded-full text-base shadow-md">
                 <Link to="/coronilla" search={{ returnDay: n }}>
+                  <CircleDotDashed className="size-7" aria-hidden />
                   Rezar la Coronilla
                 </Link>
               </Button>
