@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Settings } from "lucide-react";
+import { RefreshCw, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -10,6 +10,17 @@ import { AccountSettings } from "@/components/app/AccountSettings";
 import { ReadingToolbar, type ReadingPreferences } from "@/components/app/ReadingToolbar";
 import { EmptyState, ProgressCard, SectionTitle } from "@/components/app/cards";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,6 +71,7 @@ function Perfil() {
   const [petition, setPetition] = useState("");
   const [preferences, setPreferences] = useState<ReadingPreferences>(DEFAULT_READING_PREFERENCES);
   const [showReadingTools, setShowReadingTools] = useState(false);
+  const [isRefreshingApp, setIsRefreshingApp] = useState(false);
   const completed = (progress ?? []).filter((p) => p.completed).length;
 
   useEffect(() => {
@@ -90,6 +102,32 @@ function Perfil() {
     queryClient.clear();
     await supabase.auth.signOut();
     void navigate({ to: "/", replace: true });
+  };
+
+  const refreshApplication = async () => {
+    if (isRefreshingApp) return;
+    setIsRefreshingApp(true);
+
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+
+      if ("caches" in window) {
+        const cacheNames = await window.caches.keys();
+        await Promise.all(cacheNames.map((cacheName) => window.caches.delete(cacheName)));
+      }
+
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.update()));
+      }
+
+      toast.success("La aplicación se actualizó correctamente.");
+      window.setTimeout(() => window.location.reload(), 700);
+    } catch {
+      setIsRefreshingApp(false);
+      toast.error("No fue posible actualizar la aplicación. Intenta nuevamente.");
+    }
   };
 
   return (
@@ -199,6 +237,50 @@ function Perfil() {
           <br />
           con la colaboración de La Voz de Jesús
         </p>
+      </div>
+
+      <SectionTitle>Aplicación</SectionTitle>
+      <div className="surface-sacred rounded-2xl p-4">
+        <div className="flex items-start gap-3">
+          <RefreshCw className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+          <div>
+            <p className="font-medium">Actualizar aplicación</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Descarga la versión más reciente y renueva los datos temporales de navegación. Tu
+              sesión, contraseña y progreso permanecerán seguros.
+            </p>
+          </div>
+        </div>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button className="mt-4 w-full" variant="outline" disabled={isRefreshingApp}>
+              <RefreshCw className={isRefreshingApp ? "animate-spin" : undefined} aria-hidden />
+              {isRefreshingApp ? "Actualizando…" : "Actualizar aplicación"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Actualizar la aplicación?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Se eliminarán únicamente la caché técnica y los datos temporales de navegación. Tu
+                cuenta, contraseña, sesión y progreso no se borrarán.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isRefreshingApp}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={isRefreshingApp}
+                onClick={(event) => {
+                  event.preventDefault();
+                  void refreshApplication();
+                }}
+              >
+                {isRefreshingApp ? "Actualizando…" : "Sí, actualizar"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <Textarea className="sr-only" aria-hidden readOnly value="" />

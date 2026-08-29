@@ -15,6 +15,35 @@ import { applyReadingPreferences, loadReadingPreferences } from "@/lib/reading-p
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+function getAppAssetSignature(root: ParentNode): string {
+  const assets = [
+    ...Array.from(
+      root.querySelectorAll<HTMLScriptElement>("script[src]"),
+      (node) => node.getAttribute("src") ?? "",
+    ),
+    ...Array.from(
+      root.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"][href]'),
+      (node) => node.getAttribute("href") ?? "",
+    ),
+  ]
+    .filter((url) => url.includes("/assets/"))
+    .map((url) => new URL(url, window.location.origin).pathname);
+
+  return assets.sort().join("|");
+}
+
+async function clearTechnicalCache(): Promise<void> {
+  if ("caches" in window) {
+    const cacheNames = await window.caches.keys();
+    await Promise.all(cacheNames.map((cacheName) => window.caches.delete(cacheName)));
+  }
+
+  if ("serviceWorker" in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.update()));
+  }
+}
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -153,6 +182,57 @@ function RootComponent() {
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
+
+  useEffect(() => {
+    let checking = false;
+    let active = true;
+
+    const checkForNewVersion = async () => {
+      if (checking || !navigator.onLine) return;
+      checking = true;
+
+      try {
+        const currentSignature = getAppAssetSignature(document);
+        const checkUrl = new URL(window.location.href);
+        checkUrl.searchParams.set("__app_version_check", Date.now().toString());
+
+        const response = await fetch(checkUrl, {
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: { "Cache-Control": "no-cache" },
+        });
+        if (!response.ok || !active) return;
+
+        const latestDocument = new DOMParser().parseFromString(await response.text(), "text/html");
+        const latestSignature = getAppAssetSignature(latestDocument);
+
+        if (currentSignature && latestSignature && currentSignature !== latestSignature && active) {
+          await clearTechnicalCache();
+          window.location.reload();
+        }
+      } catch {
+        // A temporary network failure must not interrupt the user's spiritual journey.
+      } finally {
+        checking = false;
+      }
+    };
+
+    const checkWhenReturning = () => {
+      if (document.visibilityState === "visible") void checkForNewVersion();
+    };
+
+    void checkForNewVersion();
+    window.addEventListener("focus", checkForNewVersion);
+    document.addEventListener("visibilitychange", checkWhenReturning);
+    const interval = window.setInterval(() => void checkForNewVersion(), 60_000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", checkForNewVersion);
+      document.removeEventListener("visibilitychange", checkWhenReturning);
+    };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
