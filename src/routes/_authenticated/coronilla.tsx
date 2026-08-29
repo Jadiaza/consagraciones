@@ -187,6 +187,11 @@ function Coronilla() {
             onClick={() => chooseMode("audio")}
           />
         </div>
+        {returnDay && (
+          <Button className="mt-4 w-full" variant="outline" onClick={() => void exitCoronilla()}>
+            Regresar al recorrido del día
+          </Button>
+        )}
       </AppShell>
     );
   }
