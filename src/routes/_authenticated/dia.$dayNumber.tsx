@@ -45,10 +45,16 @@ import {
 import { cn } from "@/lib/utils";
 import "@/styles/day-modal-flow.css";
 
-export const Route = createFileRoute("/_authenticated/dia/$dayNumber")({ component: DiaPage });
+export const Route = createFileRoute("/_authenticated/dia/$dayNumber")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    section: search.section === "oracion" ? "oracion" : undefined,
+  }),
+  component: DiaPage,
+});
 
 function DiaPage() {
   const { dayNumber } = Route.useParams();
+  const { section } = Route.useSearch();
   const n = Number(dayNumber);
   const { user } = useAuth();
   const { data: mine } = useQuery(myConsecrationQuery(user?.id));
@@ -77,8 +83,8 @@ function DiaPage() {
   useEffect(() => {
     setShowMobileSummary(window.matchMedia("(max-width: 640px)").matches);
     setShowMobileSections(false);
-    setActiveSection("inicio");
-  }, [n]);
+    setActiveSection(section ?? "inicio");
+  }, [n, section]);
 
   const savePreferences = (next: ReadingPreferences) => {
     setPreferences(next);
@@ -595,7 +601,9 @@ function DiaPage() {
               )}
               <SectionTitle>8.1 · Coronilla de San Miguel</SectionTitle>
               <Button asChild variant="outline" className="w-full">
-                <Link to="/coronilla">Rezar la Coronilla</Link>
+                <Link to="/coronilla" search={{ returnDay: n }}>
+                  Rezar la Coronilla
+                </Link>
               </Button>
               {day.progressive_consecration && (
                 <>

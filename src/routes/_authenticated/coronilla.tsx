@@ -17,12 +17,21 @@ type Modo = null | "interactiva" | "manual" | "audio";
 const SAN_MIGUEL_ROUND_PRAYER =
   "San Miguel Arcángel, defiéndenos en la pelea. Sé nuestro amparo y refugio contra las asechanzas del demonio. ¡Reprímele, oh Dios, con voz imperiosa, como rendidamente te lo suplicamos! Y tú, Príncipe de las Milicias Celestiales, armado del poder divino, precipita al infierno a Satanás y a todos los espíritus malignos que, para la perdición de las almas, vagan por el mundo. Amén.";
 
-export const Route = createFileRoute("/_authenticated/coronilla")({ component: Coronilla });
+export const Route = createFileRoute("/_authenticated/coronilla")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const returnDay = Number(search.returnDay);
+    return {
+      returnDay: Number.isInteger(returnDay) && returnDay > 0 ? returnDay : undefined,
+    };
+  },
+  component: Coronilla,
+});
 
 function Coronilla() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = Route.useNavigate();
+  const { returnDay } = Route.useSearch();
   const { data: prayers, isLoading } = useQuery(prayersQuery());
   const { data: savedProgress, isLoading: isLoadingProgress } = useQuery({
     queryKey: ["coronilla-progress", user?.id],
@@ -101,11 +110,24 @@ function Coronilla() {
     if (error) throw error;
   };
 
+  const exitCoronilla = async () => {
+    if (returnDay) {
+      await navigate({
+        to: "/dia/$dayNumber",
+        params: { dayNumber: String(returnDay) },
+        search: { section: "oracion" },
+        hash: "panel-oracion",
+      });
+      return;
+    }
+    await navigate({ to: "/dashboard" });
+  };
+
   const saveAndExit = async (group: number, beadIndex: number) => {
     try {
       await saveProgress(group, beadIndex);
       toast.success("Guardamos tu última cuenta.");
-      await navigate({ to: "/dashboard" });
+      await exitCoronilla();
     } catch {
       toast.error("No pudimos guardar tu cuenta. Intenta de nuevo.");
     }
@@ -176,7 +198,11 @@ function Coronilla() {
           La guía en audio se publicará desde el repositorio multimedia. Mientras tanto puedes rezar
           en modo interactivo o manual.
         </p>
-        <Button className="mt-4 w-full" variant="outline" onClick={() => setModo(null)}>
+        <Button
+          className="mt-4 w-full"
+          variant="outline"
+          onClick={() => (returnDay ? void exitCoronilla() : setModo(null))}
+        >
           Volver
         </Button>
       </AppShell>
@@ -215,7 +241,11 @@ function Coronilla() {
             <PrayerCard key={p.id} title={p.title} body={p.body} response={p.response} />
           ))}
         </div>
-        <Button className="mt-6 w-full" variant="outline" onClick={() => setModo(null)}>
+        <Button
+          className="mt-6 w-full"
+          variant="outline"
+          onClick={() => (returnDay ? void exitCoronilla() : setModo(null))}
+        >
           Volver
         </Button>
       </AppShell>
@@ -243,8 +273,12 @@ function Coronilla() {
           >
             Rezar nuevamente
           </Button>
-          <Button className="mt-3 w-full" variant="outline" onClick={() => setModo(null)}>
-            Volver a modalidades
+          <Button
+            className="mt-3 w-full"
+            variant="outline"
+            onClick={() => (returnDay ? void exitCoronilla() : setModo(null))}
+          >
+            {returnDay ? "Volver al recorrido del día" : "Volver a modalidades"}
           </Button>
         </div>
       </AppShell>
@@ -314,8 +348,10 @@ function Coronilla() {
             <Button
               className="h-14 w-full rounded-full"
               onClick={() => {
-                if (isLastStep) setCompleted(true);
-                else setGuidedStep((step) => Math.min(step + 1, guidedTotal - 1));
+                if (isLastStep) {
+                  if (returnDay) void exitCoronilla();
+                  else setCompleted(true);
+                } else setGuidedStep((step) => Math.min(step + 1, guidedTotal - 1));
               }}
             >
               {isLastStep ? "Finalizar" : "Siguiente"}
@@ -324,11 +360,7 @@ function Coronilla() {
           )}
         </div>
         {!isCounterStep && (
-          <Button
-            className="mt-3 w-full"
-            variant="ghost"
-            onClick={() => void navigate({ to: "/dashboard" })}
-          >
+          <Button className="mt-3 w-full" variant="ghost" onClick={() => void exitCoronilla()}>
             Salir de la coronilla
           </Button>
         )}
