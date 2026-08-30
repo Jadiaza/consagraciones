@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ConocerRouteImport } from './routes/conocer'
 import { Route as RecursosRouteImport } from './routes/recursos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCoronillaRouteImport } from './routes/_authenticated/coronilla'
@@ -19,8 +20,6 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDiasRouteImport } from './routes/_authenticated/dias'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
-import { Route as AudiosIndexRouteImport } from './routes/audios.index'
-import { Route as AudiosDayNumberRouteImport } from './routes/audios.$dayNumber'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthenticatedDiaIndexRouteImport } from './routes/_authenticated/dia.index'
 import { Route as AuthenticatedDiaDayNumberRouteImport } from './routes/_authenticated/dia.$dayNumber'
@@ -37,6 +36,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConocerRoute = ConocerRouteImport.update({
+  id: '/conocer',
+  path: '/conocer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecursosRoute = RecursosRouteImport.update({
@@ -74,16 +78,6 @@ const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AudiosIndexRoute = AudiosIndexRouteImport.update({
-  id: '/audios/',
-  path: '/audios/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AudiosDayNumberRoute = AudiosDayNumberRouteImport.update({
-  id: '/audios/$dayNumber',
-  path: '/audios/$dayNumber',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -104,6 +98,7 @@ const AuthenticatedDiaDayNumberRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/conocer': typeof ConocerRoute
   '/recursos': typeof RecursosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/coronilla': typeof AuthenticatedCoronillaRoute
@@ -111,15 +106,14 @@ export interface FileRoutesByFullPath {
   '/dias': typeof AuthenticatedDiasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/perfil': typeof AuthenticatedPerfilRoute
-  '/audios/$dayNumber': typeof AudiosDayNumberRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/audios/': typeof AudiosIndexRoute
   '/dia/$dayNumber': typeof AuthenticatedDiaDayNumberRoute
   '/dia/': typeof AuthenticatedDiaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/conocer': typeof ConocerRoute
   '/recursos': typeof RecursosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/coronilla': typeof AuthenticatedCoronillaRoute
@@ -127,9 +121,7 @@ export interface FileRoutesByTo {
   '/dias': typeof AuthenticatedDiasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/perfil': typeof AuthenticatedPerfilRoute
-  '/audios/$dayNumber': typeof AudiosDayNumberRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/audios': typeof AudiosIndexRoute
   '/dia/$dayNumber': typeof AuthenticatedDiaDayNumberRoute
   '/dia': typeof AuthenticatedDiaIndexRoute
 }
@@ -138,6 +130,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/conocer': typeof ConocerRoute
   '/recursos': typeof RecursosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/coronilla': typeof AuthenticatedCoronillaRoute
@@ -145,9 +138,7 @@ export interface FileRoutesById {
   '/_authenticated/dias': typeof AuthenticatedDiasRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
-  '/audios/$dayNumber': typeof AudiosDayNumberRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/audios/': typeof AudiosIndexRoute
   '/_authenticated/dia/$dayNumber': typeof AuthenticatedDiaDayNumberRoute
   '/_authenticated/dia/': typeof AuthenticatedDiaIndexRoute
 }
@@ -156,6 +147,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/conocer'
     | '/recursos'
     | '/admin'
     | '/coronilla'
@@ -163,15 +155,14 @@ export interface FileRouteTypes {
     | '/dias'
     | '/onboarding'
     | '/perfil'
-    | '/audios/$dayNumber'
     | '/auth/reset-password'
-    | '/audios/'
     | '/dia/$dayNumber'
     | '/dia/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/conocer'
     | '/recursos'
     | '/admin'
     | '/coronilla'
@@ -179,9 +170,7 @@ export interface FileRouteTypes {
     | '/dias'
     | '/onboarding'
     | '/perfil'
-    | '/audios/$dayNumber'
     | '/auth/reset-password'
-    | '/audios'
     | '/dia/$dayNumber'
     | '/dia'
   id:
@@ -189,6 +178,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/conocer'
     | '/recursos'
     | '/_authenticated/admin'
     | '/_authenticated/coronilla'
@@ -196,9 +186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dias'
     | '/_authenticated/onboarding'
     | '/_authenticated/perfil'
-    | '/audios/$dayNumber'
     | '/auth/reset-password'
-    | '/audios/'
     | '/_authenticated/dia/$dayNumber'
     | '/_authenticated/dia/'
   fileRoutesById: FileRoutesById
@@ -207,9 +195,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  ConocerRoute: typeof ConocerRoute
   RecursosRoute: typeof RecursosRoute
-  AudiosDayNumberRoute: typeof AudiosDayNumberRoute
-  AudiosIndexRoute: typeof AudiosIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -233,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conocer': {
+      id: '/conocer'
+      path: '/conocer'
+      fullPath: '/conocer'
+      preLoaderRoute: typeof ConocerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recursos': {
@@ -283,20 +277,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/perfil'
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/audios/': {
-      id: '/audios/'
-      path: '/audios'
-      fullPath: '/audios/'
-      preLoaderRoute: typeof AudiosIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/audios/$dayNumber': {
-      id: '/audios/$dayNumber'
-      path: '/audios/$dayNumber'
-      fullPath: '/audios/$dayNumber'
-      preLoaderRoute: typeof AudiosDayNumberRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/auth/reset-password': {
       id: '/auth/reset-password'
@@ -361,9 +341,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  ConocerRoute: ConocerRoute,
   RecursosRoute: RecursosRoute,
-  AudiosDayNumberRoute: AudiosDayNumberRoute,
-  AudiosIndexRoute: AudiosIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
