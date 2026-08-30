@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#061426" />
+    <meta
+      name="description"
+      content="Playlist espiritual con las enseñanzas de la Consagración de 33 días con los Santos Arcángeles."
+    />
+    <meta property="og:title" content="33 días en audio · Santos Arcángeles" />
+    <meta
+      property="og:description"
+      content="Escucha y comparte las enseñanzas diarias de la Consagración."
+    />
+    <meta property="og:type" content="website" />
+    <title>33 días en audio · Santos Arcángeles</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Karla:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-image" aria-hidden="true"></div>
+      <div class="header-content">
+        <div>
+          <p class="eyebrow">La Voz de Jesús · Enseñanzas</p>
+          <h1>33 días con los Santos Arcángeles</h1>
+        </div>
+        <a class="app-link" href="https://consagraciones.vercel.app" target="_blank" rel="noreferrer">
+          Ir a la aplicación
+        </a>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="player-card" aria-labelledby="episode-title">
+        <div class="episode-cover">
+          <div class="cover-image" aria-hidden="true"></div>
+          <div class="episode-copy">
+            <span class="day-pill" id="day-pill">Día 1 de 33</span>
+            <h2 id="episode-title">¿Quiénes son los ángeles?</h2>
+            <p id="episode-summary"></p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <audio id="audio" preload="metadata"></audio>
+          <div class="timeline">
+            <span id="current-time">0:00</span>
+            <input id="progress" aria-label="Progreso del audio" type="range" min="0" max="0" value="0" />
+            <span id="duration">0:00</span>
+          </div>
+
+          <div class="transport">
+            <button id="previous" class="round secondary" aria-label="Episodio anterior">‹</button>
+            <button id="rewind" class="round ghost" aria-label="Retroceder 15 segundos">−15</button>
+            <button id="play" class="round primary" aria-label="Reproducir">▶</button>
+            <button id="speed" class="round ghost" aria-label="Cambiar velocidad">1×</button>
+            <button id="next" class="round secondary" aria-label="Episodio siguiente">›</button>
+          </div>
+
+          <div class="actions">
+            <button id="share" class="button outline">Compartir este día</button>
+            <a id="daily-route" class="button gold" href="https://consagraciones.vercel.app/dia/1">
+              Realizar el recorrido en la app
+            </a>
+          </div>
+
+          <label class="auto-next">
+            <input id="auto-next" type="checkbox" checked />
+            Reproducir automáticamente el siguiente audio
+          </label>
+        </div>
+      </section>
+
+      <aside class="playlist-card">
+        <div class="playlist-heading">
+          <div>
+            <h2>Playlist espiritual</h2>
+            <p><span id="available-count">4</span> enseñanzas disponibles</p>
+          </div>
+          <span class="headphones" aria-hidden="true">♫</span>
+        </div>
+        <div id="playlist" class="playlist"></div>
+      </aside>
+    </main>
+
+    <footer>
+      <p>
+        Este reproductor permite escuchar las enseñanzas. Para completar cada día de la
+        Consagración, realiza todas las secciones del recorrido espiritual en la aplicación.
+      </p>
+      <strong>¿Quién como Dios? ¡Nadie como Dios!</strong>
+    </footer>
+
+    <div id="notice" class="notice" role="status" aria-live="polite"></div>
+    <script src="./playlist.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
