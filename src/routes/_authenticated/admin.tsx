@@ -263,7 +263,10 @@ function AdminPage() {
             </Suspense>
           )}
           {(section === "prayers" || section === "resources") && selectedId && (
-            <ContentManager kind={section} consecrationId={selectedId} />
+            <div className="space-y-5">
+              {section === "prayers" && <CoronillaAudioManager consecrationId={selectedId} />}
+              <ContentManager kind={section} consecrationId={selectedId} />
+            </div>
           )}
         </div>
       </main>
@@ -707,6 +710,111 @@ function Days({ items, stages }: { items: Day[]; stages: Stage[] }) {
           </tbody>
         </table>
       </div>
+    </Panel>
+  );
+}
+
+const CORONILLA_AUDIO_DEFAULTS = {
+  public_url:
+    "https://pub-d51964240d644bebafa009ba9eae6df4.r2.dev/modulos/consagraciones/san-miguel/audios/Coronilla_SM.mp3",
+  storage_key: "modulos/consagraciones/san-miguel/audios/Coronilla_SM.mp3",
+};
+
+function CoronillaAudioManager({ consecrationId }: { consecrationId: string }) {
+  const qc = useQueryClient();
+  const [publicUrl, setPublicUrl] = useState(CORONILLA_AUDIO_DEFAULTS.public_url);
+  const [storageKey, setStorageKey] = useState(CORONILLA_AUDIO_DEFAULTS.storage_key);
+  const audio = useQuery({
+    queryKey: ["admin-coronilla-audio", consecrationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("media_assets")
+        .select("id,public_url,storage_key")
+        .eq("consecration_id", consecrationId)
+        .eq("asset_type", "coronilla_audio")
+        .is("day_id", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (!audio.data) return;
+    setPublicUrl(audio.data.public_url ?? "");
+    setStorageKey(audio.data.storage_key);
+  }, [audio.data]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const url = publicUrl.trim();
+      const key = storageKey.trim();
+      if (!url || !key) throw new Error("Completa el enlace público y la ruta del archivo.");
+      try {
+        new URL(url);
+      } catch {
+        throw new Error("El enlace público no es válido.");
+      }
+      const payload = {
+        consecration_id: consecrationId,
+        day_id: null,
+        asset_type: "coronilla_audio",
+        provider: "cloudflare_r2",
+        storage_key: key,
+        public_url: url,
+        mime_type: "audio/mpeg",
+        alt_text: "Coronilla de San Miguel Arcángel en audio",
+        is_downloadable: false,
+      };
+      const result = audio.data?.id
+        ? await supabase.from("media_assets").update(payload).eq("id", audio.data.id)
+        : await supabase.from("media_assets").insert(payload);
+      if (result.error) throw result.error;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["admin-coronilla-audio", consecrationId] }),
+        qc.invalidateQueries({ queryKey: ["coronilla-audio"] }),
+      ]);
+      toast.success("Audio de la Coronilla guardado");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return (
+    <Panel title="Audio de la Coronilla">
+      <form
+        className="grid gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end"
+        onSubmit={(event) => {
+          event.preventDefault();
+          save.mutate();
+        }}
+      >
+        <Field label="Enlace público del MP3">
+          <Input
+            type="url"
+            value={publicUrl}
+            onChange={(event) => setPublicUrl(event.target.value)}
+            placeholder="https://…/Coronilla.mp3"
+          />
+        </Field>
+        <Field label="Ruta del archivo en R2">
+          <Input value={storageKey} onChange={(event) => setStorageKey(event.target.value)} />
+        </Field>
+        <Button
+          disabled={save.isPending || audio.isLoading}
+          className="bg-[#c99a3d] text-[#061426]"
+        >
+          <Save />
+          Guardar audio
+        </Button>
+      </form>
+      <p className="mt-3 text-xs text-muted-foreground">
+        Este audio se usa únicamente en Coronilla → Modo audio. No modifica los podcasts de cada
+        día.
+      </p>
     </Panel>
   );
 }
