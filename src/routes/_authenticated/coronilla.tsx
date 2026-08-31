@@ -5,12 +5,14 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app/AppShell";
+import { AudioPlayer } from "@/components/app/AudioPlayer";
 import { RosaryCounter } from "@/components/app/RosaryCounter";
 import { LoadingState, PrayerCard } from "@/components/app/cards";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { prayersQuery } from "@/lib/consecration";
+import { coronillaAudioQuery, prayersQuery } from "@/lib/consecration";
+import { MediaService } from "@/lib/media-service";
 
 type Modo = null | "interactiva" | "manual" | "audio";
 
@@ -33,6 +35,7 @@ function Coronilla() {
   const navigate = Route.useNavigate();
   const { returnDay } = Route.useSearch();
   const { data: prayers, isLoading } = useQuery(prayersQuery());
+  const { data: coronillaAudio, isLoading: isLoadingAudio } = useQuery(coronillaAudioQuery());
   const { data: savedProgress, isLoading: isLoadingProgress } = useQuery({
     queryKey: ["coronilla-progress", user?.id],
     enabled: Boolean(user),
@@ -61,7 +64,7 @@ function Coronilla() {
     setModo("interactiva");
   }, [modo, prayers, savedProgress]);
 
-  if (isLoading || isLoadingProgress || !prayers)
+  if (isLoading || isLoadingProgress || isLoadingAudio || !prayers)
     return (
       <AppShell title="Coronilla">
         <LoadingState />
@@ -197,18 +200,20 @@ function Coronilla() {
   }
 
   if (modo === "audio") {
+    const audioUrl = MediaService.url(coronillaAudio);
     return (
       <AppShell title="Coronilla · Audio">
-        <p className="surface-sacred rounded-2xl p-5 text-center text-sm text-muted-foreground">
-          La guía en audio se publicará desde el repositorio multimedia. Mientras tanto puedes rezar
-          en modo interactivo o manual.
-        </p>
+        <AudioPlayer
+          src={audioUrl}
+          title="Coronilla de San Miguel Arcángel"
+          subtitle="Escucha la guía completa y reza a tu ritmo."
+        />
         <Button
           className="mt-4 w-full"
           variant="outline"
           onClick={() => (returnDay ? void exitCoronilla() : setModo(null))}
         >
-          Volver
+          {returnDay ? "Regresar al recorrido del día" : "Volver a modalidades"}
         </Button>
       </AppShell>
     );
