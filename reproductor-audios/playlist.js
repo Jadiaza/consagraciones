@@ -42,6 +42,7 @@ const SUMMARIES = {
   2: "Recorreremos los pasajes bíblicos que presentan a San Miguel y descubriremos que su verdadera grandeza está en servir fielmente el designio y la autoridad de Dios.",
   3: "Profundizaremos en la misión de San Miguel y aprenderemos que la verdadera fortaleza espiritual nace de permanecer orientados hacia Dios mediante la adoración, la obediencia y el servicio.",
   4: "Comprenderemos que toda la creación encuentra su sentido último en Dios y que glorificarlo significa permitir que nuestra vida refleje su bondad, su verdad y su santidad.",
+  5: "Descubriremos que los ángeles adoran a Dios y cumplen su voluntad con fidelidad, y aprenderemos que la verdadera devoción angélica nos conduce a servir al Señor con humildad, obediencia y amor.",
 };
 
 window.AUDIO_EPISODES = TITLES.map((title, index) => {
@@ -49,7 +50,7 @@ window.AUDIO_EPISODES = TITLES.map((title, index) => {
   return {
     day,
     title,
-    available: day <= 4,
+    available: day <= 5,
     summary:
       SUMMARIES[day] ||
       "La enseñanza de este día estará disponible próximamente como parte del camino espiritual de la Consagración.",
