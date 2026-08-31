@@ -121,6 +121,26 @@ export const prayersQuery = (consecrationId?: string) =>
     },
   });
 
+export const coronillaAudioQuery = (consecrationId?: string) =>
+  queryOptions({
+    queryKey: ["coronilla-audio", consecrationId ?? CONSECRATION_SLUG],
+    queryFn: async () => {
+      const consecration = await fetchConsecration(consecrationId);
+      if (!consecration) return null;
+      const { data, error } = await supabase
+        .from("media_assets")
+        .select("id,provider,storage_key,public_url,mime_type,duration_seconds,alt_text")
+        .eq("consecration_id", consecration.id)
+        .eq("asset_type", "coronilla_audio")
+        .is("day_id", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
 export const resourcesQuery = (consecrationId?: string) =>
   queryOptions({
     queryKey: ["resources", consecrationId ?? "all"],
