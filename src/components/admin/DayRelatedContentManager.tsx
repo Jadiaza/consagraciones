@@ -300,7 +300,11 @@ function RelatedEditor({
         {config.title}{" "}
         <span className="ml-2 text-xs text-white/45">({query.data?.length ?? 0})</span>
       </summary>
-      <div className="grid gap-4 border-t border-white/10 p-4 lg:grid-cols-[.8fr_1.2fr]">
+      <div
+        className={`grid gap-4 border-t border-white/10 p-4 ${
+          config.table === "examination_questions" ? "grid-cols-1" : "lg:grid-cols-[.8fr_1.2fr]"
+        }`}
+      >
         <div className="space-y-2">
           <Button type="button" size="sm" variant="outline" onClick={reset}>
             <Plus /> Nuevo
@@ -316,7 +320,15 @@ function RelatedEditor({
               onClick={() => edit(row)}
               className={`flex w-full items-center gap-2 rounded-lg border p-3 text-left text-sm ${selectedId === row.id ? "border-[#d4af37]/60 bg-[#fef3c7]/55" : "border-slate-200 bg-white"}`}
             >
-              <span className="min-w-0 flex-1 truncate">{config.label(row)}</span>
+              <span
+                className={`min-w-0 flex-1 ${
+                  config.table === "examination_questions"
+                    ? "whitespace-pre-wrap leading-relaxed"
+                    : "truncate"
+                }`}
+              >
+                {config.label(row)}
+              </span>
               <Pencil className="size-4 shrink-0" />
             </button>
           ))}
@@ -376,7 +388,11 @@ function EditorField({
         {field.required ? " *" : ""}
       </Label>
       {field.kind === "textarea" ? (
-        <RichTextEditor rows={4} value={String(value ?? "")} onChange={setValue} />
+        <RichTextEditor
+          rows={field.key === "question" ? 12 : 4}
+          value={String(value ?? "")}
+          onChange={setValue}
+        />
       ) : field.kind === "select" ? (
         <select
           className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
