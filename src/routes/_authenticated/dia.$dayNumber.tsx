@@ -215,9 +215,10 @@ function DiaPage() {
           .getElementById(`panel-${id}`)
           ?.scrollIntoView({ behavior: "smooth", block: "start" });
       } else {
-        document
-          .querySelector(".reading-day-header")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.querySelector<HTMLElement>(".day-reading-content")?.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
       }
     });
   };

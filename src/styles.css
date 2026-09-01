@@ -1185,20 +1185,33 @@ html[data-app-theme="sepia"] {
 
     .day-sequence-nav {
       align-items: stretch;
-      border-top: 1px solid var(--reading-border);
       display: grid;
       gap: 0.5rem;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      margin-top: 2rem;
-      padding-top: 0.8rem;
+      left: 50%;
+      max-width: 46rem;
+      padding: 0 0.75rem;
+      pointer-events: none;
+      position: fixed;
+      transform: translateX(-50%);
+      width: 100%;
+      z-index: 47;
+      bottom: calc(76px + env(safe-area-inset-bottom));
     }
 
     .day-sequence-nav button {
       align-items: center;
+      backdrop-filter: blur(18px);
+      background: color-mix(in srgb, var(--reading-card) 88%, transparent);
+      border: 1px solid var(--reading-border);
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
       color: var(--reading-fg);
       display: flex;
       gap: 0.35rem;
       min-height: 3rem;
+      padding: 0.45rem 0.75rem;
+      pointer-events: auto;
       text-align: left;
     }
 
@@ -1225,6 +1238,12 @@ html[data-app-theme="sepia"] {
 
     .day-sequence-nav__count {
       align-self: center;
+      backdrop-filter: blur(18px);
+      background: color-mix(in srgb, var(--reading-card) 88%, transparent);
+      border: 1px solid var(--reading-border);
+      border-radius: 999px;
+      box-shadow: 0 6px 18px rgb(0 0 0 / 14%);
+      padding: 0.45rem 0.65rem;
       white-space: nowrap;
     }
   }
