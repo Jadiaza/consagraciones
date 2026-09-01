@@ -674,7 +674,6 @@ function DiaPage() {
               <button type="button" onClick={() => goToSequenceSection(previousSection.id)}>
                 <ChevronLeft aria-hidden />
                 <span>
-                  <small>Anterior</small>
                   <strong>{previousSection.label}</strong>
                 </span>
               </button>
@@ -691,7 +690,6 @@ function DiaPage() {
                 onClick={() => goToSequenceSection(nextSection.id)}
               >
                 <span>
-                  <small>Siguiente</small>
                   <strong>{nextSection.label}</strong>
                 </span>
                 <ChevronRight aria-hidden />
