@@ -667,6 +667,8 @@ function DiaPage() {
               </Button>
             </section>
           </div>
+        </div>
+        {!showMobileSummary && !showMobileSections && (
           <nav className="day-sequence-nav" aria-label="Navegación entre secciones">
             {previousSection ? (
               <button type="button" onClick={() => goToSequenceSection(previousSection.id)}>
@@ -698,7 +700,7 @@ function DiaPage() {
               <span />
             )}
           </nav>
-        </div>
+        )}
       </div>
     </AppShell>
   );
