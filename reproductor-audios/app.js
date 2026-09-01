@@ -1,5 +1,5 @@
-const episodes = window.AUDIO_EPISODES;
-const available = episodes.filter((episode) => episode.available);
+let episodes = window.EMPTY_AUDIO_EPISODES;
+let available = [];
 const audio = document.querySelector("#audio");
 const playlist = document.querySelector("#playlist");
 const playButton = document.querySelector("#play");
@@ -14,11 +14,7 @@ let completed = JSON.parse(localStorage.getItem("lvj-audios-completed") || "[]")
 
 const requestedDay = Number(new URLSearchParams(location.search).get("dia"));
 const savedDay = Number(localStorage.getItem("lvj-audios-last-episode"));
-let currentDay = episodes.find((episode) => episode.day === requestedDay && episode.available)
-  ? requestedDay
-  : episodes.find((episode) => episode.day === savedDay && episode.available)
-    ? savedDay
-    : 1;
+let currentDay = requestedDay || savedDay || 1;
 
 function formatTime(value) {
   if (!Number.isFinite(value)) return "0:00";
@@ -47,6 +43,40 @@ function renderPlaylist() {
     `;
     if (episode.available) button.addEventListener("click", () => selectEpisode(episode.day));
     playlist.append(button);
+  }
+}
+
+async function refreshEpisodes({ preserveSelection = true } = {}) {
+  try {
+    const freshEpisodes = await window.loadAudioEpisodes();
+    const changed = JSON.stringify(freshEpisodes) !== JSON.stringify(episodes);
+    episodes = freshEpisodes;
+    available = episodes.filter((episode) => episode.available);
+    document.querySelector("#available-count").textContent = String(available.length);
+
+    const currentIsAvailable = episodes.some(
+      (episode) => episode.day === currentDay && episode.available,
+    );
+    if (!currentIsAvailable) {
+      const requestedIsAvailable = episodes.some(
+        (episode) => episode.day === requestedDay && episode.available,
+      );
+      const savedIsAvailable = episodes.some(
+        (episode) => episode.day === savedDay && episode.available,
+      );
+      currentDay = requestedIsAvailable
+        ? requestedDay
+        : savedIsAvailable
+          ? savedDay
+          : available[0]?.day || 1;
+    }
+
+    if (!preserveSelection || changed) selectEpisode(currentDay);
+    else renderPlaylist();
+  } catch (error) {
+    console.error(error);
+    renderPlaylist();
+    flash("No fue posible actualizar la lista. Intentaremos nuevamente.");
   }
 }
 
@@ -143,5 +173,10 @@ document.querySelector("#share").addEventListener("click", async () => {
   }
 });
 
-document.querySelector("#available-count").textContent = String(available.length);
-selectEpisode(currentDay);
+await refreshEpisodes({ preserveSelection: false });
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") void refreshEpisodes();
+});
+window.addEventListener("focus", () => void refreshEpisodes());
+window.setInterval(() => void refreshEpisodes(), 60_000);

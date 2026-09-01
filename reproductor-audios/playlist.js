@@ -1,5 +1,5 @@
-const AUDIO_BASE =
-  "https://pub-d51964240d644bebafa009ba9eae6df4.r2.dev/modulos/consagraciones/san-miguel/podcast";
+const SUPABASE_URL = "https://zcfnquusvkrkqjeusmly.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_rOQf6vFxEyDYoeMJRsnVUQ_URAGYkzz";
 
 const TITLES = [
   "¿Quiénes son los ángeles?",
@@ -43,17 +43,64 @@ const SUMMARIES = {
   3: "Profundizaremos en la misión de San Miguel y aprenderemos que la verdadera fortaleza espiritual nace de permanecer orientados hacia Dios mediante la adoración, la obediencia y el servicio.",
   4: "Comprenderemos que toda la creación encuentra su sentido último en Dios y que glorificarlo significa permitir que nuestra vida refleje su bondad, su verdad y su santidad.",
   5: "Descubriremos que los ángeles adoran a Dios y cumplen su voluntad con fidelidad, y aprenderemos que la verdadera devoción angélica nos conduce a servir al Señor con humildad, obediencia y amor.",
+  6: "Aprenderemos a reconocer, acoger y cumplir la voluntad de Dios, confiando en que sus caminos nos conducen siempre hacia la verdad, la libertad y la plenitud.",
 };
 
-window.AUDIO_EPISODES = TITLES.map((title, index) => {
-  const day = index + 1;
-  return {
-    day,
-    title,
-    available: day <= 5,
-    summary:
-      SUMMARIES[day] ||
-      "La enseñanza de este día estará disponible próximamente como parte del camino espiritual de la Consagración.",
-    audioUrl: `${AUDIO_BASE}/Dia-${String(day).padStart(2, "0")}.mp3`,
-  };
-});
+const EMPTY_EPISODES = TITLES.map((title, index) => ({
+  day: index + 1,
+  title,
+  available: false,
+  summary:
+    SUMMARIES[index + 1] ||
+    "La enseñanza de este día estará disponible próximamente como parte del camino espiritual de la Consagración.",
+  audioUrl: "",
+  durationSeconds: 0,
+}));
+
+window.loadAudioEpisodes = async function loadAudioEpisodes() {
+  const select = [
+    "public_url",
+    "storage_key",
+    "duration_seconds",
+    "created_at",
+    "consecration_days!inner(day_number,title,status)",
+  ].join(",");
+  const endpoint = new URL(`${SUPABASE_URL}/rest/v1/media_assets`);
+  endpoint.searchParams.set("select", select);
+  endpoint.searchParams.set("asset_type", "eq.podcast");
+  endpoint.searchParams.set("consecration_days.status", "eq.published");
+  endpoint.searchParams.set("order", "created_at.desc");
+
+  const response = await fetch(endpoint, {
+    cache: "no-store",
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+    },
+  });
+  if (!response.ok) throw new Error(`No fue posible consultar los audios (${response.status}).`);
+
+  const records = await response.json();
+  const publishedByDay = new Map();
+  for (const record of records) {
+    const day = Number(record.consecration_days?.day_number);
+    if (!day || publishedByDay.has(day)) continue;
+    const audioUrl = String(record.public_url || "").trim();
+    if (!audioUrl) continue;
+    publishedByDay.set(day, record);
+  }
+
+  return EMPTY_EPISODES.map((episode) => {
+    const record = publishedByDay.get(episode.day);
+    if (!record) return { ...episode };
+    return {
+      ...episode,
+      title: record.consecration_days?.title || episode.title,
+      available: true,
+      audioUrl: record.public_url,
+      durationSeconds: Number(record.duration_seconds || 0),
+    };
+  });
+};
+
+window.EMPTY_AUDIO_EPISODES = EMPTY_EPISODES;
