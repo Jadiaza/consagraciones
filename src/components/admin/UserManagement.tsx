@@ -1,10 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Pencil, Search, ShieldCheck, UserRound } from "lucide-react";
+import {
+  Ban,
+  CheckCircle2,
+  KeyRound,
+  Plus,
+  Search,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/cards";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,229 +30,506 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+
 type Mode = "users" | "activity";
 type AppRole = "user" | "companion" | "editor" | "admin";
+type Enrollment = {
+  id: string;
+  consecration_id: string;
+  current_day: number;
+  status: string;
+  start_date: string;
+};
+type AdminUser = {
+  id: string;
+  email: string;
+  authPhone: string;
+  createdAt: string;
+  lastSignInAt: string | null;
+  emailConfirmedAt: string | null;
+  bannedUntil: string | null;
+  profile: Record<string, string | null> | null;
+  enrollments: Enrollment[];
+  roles: AppRole[];
+  superAdmin: boolean;
+};
+type AdminData = {
+  users: AdminUser[];
+  progress: Array<{
+    id: string;
+    user_id: string;
+    user_consecration_id: string;
+    day_number: number;
+    completed: boolean;
+    updated_at: string;
+  }>;
+  consecrations: Array<{ id: string; title: string; duration_days: number }>;
+};
+
+const blank = {
+  fullName: "",
+  displayName: "",
+  email: "",
+  phone: "",
+  city: "",
+  country: "Colombia",
+  parish: "",
+  password: "acceso123",
+  role: "user" as AppRole,
+  consecrationId: "",
+  startDate: new Date().toISOString().slice(0, 10),
+};
+async function adminAction(body: Record<string, unknown>) {
+  const { data, error } = await supabase.functions.invoke("admin-users", { body });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
 export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrationId?: string }) {
   const qc = useQueryClient();
-  const [q, setQ] = useState("");
-  const data = useQuery({
-    queryKey: ["admin-users", consecrationId],
-    queryFn: async () => {
-      const { data: auth, error: authError } = await supabase.auth.getUser();
-      if (authError || !auth.user) throw authError ?? new Error("La sesión expiró");
-
-      const { data: currentRoles, error: currentRolesError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", auth.user.id);
-      if (currentRolesError) throw currentRolesError;
-      if (!currentRoles?.some(({ role }) => role === "admin")) {
-        throw new Error("Solo los administradores pueden consultar usuarios y actividad");
-      }
-
-      const [p, e, d, c, r] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id,full_name,display_name,community,created_at")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("user_consecrations")
-          .select("id,user_id,consecration_id,start_date,current_day,status,updated_at")
-          .order("updated_at", { ascending: false }),
-        supabase
-          .from("user_day_progress")
-          .select("id,user_id,user_consecration_id,day_number,completed,updated_at")
-          .order("updated_at", { ascending: false })
-          .limit(300),
-        supabase.from("consecrations").select("id,title,duration_days"),
-        supabase.from("user_roles").select("user_id,role"),
-      ]);
-      const error = [p, e, d, c, r].find((x) => x.error)?.error;
-      if (error) throw error;
-      return {
-        profiles: p.data ?? [],
-        enrollments: e.data ?? [],
-        progress: d.data ?? [],
-        consecrations: c.data ?? [],
-        roles: r.data ?? [],
-        // `super_admins` was introduced after the first production schema.
-        // Role management still validates super-admin access in the database RPC.
-        superIds: new Set<string>(),
-      };
-    },
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<AdminUser | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState(blank);
+  const [temporaryPassword, setTemporaryPassword] = useState("acceso123");
+  const [reason, setReason] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const query = useQuery<AdminData>({
+    queryKey: ["admin-users-complete"],
+    queryFn: () => adminAction({ action: "list" }),
   });
-  const changeRole = useMutation({
-    mutationFn: async ({ id, role }: { id: string; role: AppRole }) => {
-      const { error } = await supabase.rpc(
-        "super_admin_set_user_role" as never,
-        { target_user: id, next_role: role } as never,
-      );
-      if (error) throw error;
-    },
+  const mutation = useMutation({
+    mutationFn: adminAction,
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast.success("Privilegios actualizados");
+      await qc.invalidateQueries({ queryKey: ["admin-users-complete"] });
+      toast.success("Usuario actualizado");
     },
-    onError: (e) => toast.error(e.message),
+    onError: (error) => toast.error(error.message),
   });
+
   const rows = useMemo(
     () =>
-      data.data?.profiles
-        .map((p) => {
-          const enrollment = data.data.enrollments.find(
-            (e) => e.user_id === p.id && (!consecrationId || e.consecration_id === consecrationId),
+      (query.data?.users || [])
+        .map((user) => {
+          const enrollment = user.enrollments.find(
+            (item) => !consecrationId || item.consecration_id === consecrationId,
           );
-          const cons = data.data.consecrations.find((c) => c.id === enrollment?.consecration_id);
+          const consecration = query.data?.consecrations.find(
+            (item) => item.id === enrollment?.consecration_id,
+          );
           const completed = enrollment
-            ? data.data.progress.filter(
-                (x) => x.user_consecration_id === enrollment.id && x.completed,
-              ).length
+            ? query.data?.progress.filter(
+                (item) => item.user_consecration_id === enrollment.id && item.completed,
+              ).length || 0
             : 0;
           return {
-            ...p,
+            user,
             enrollment,
-            cons,
+            consecration,
             completed,
-            percent: cons ? Math.round((completed / cons.duration_days) * 100) : 0,
-            role:
-              data.data.roles.find((r) => r.user_id === p.id && r.role !== "user")?.role ?? "user",
-            superAdmin: data.data.superIds.has(p.id),
+            percent: consecration ? Math.round((completed / consecration.duration_days) * 100) : 0,
           };
         })
-        .filter((x) => !consecrationId || Boolean(x.enrollment))
-        .filter((x) =>
-          `${x.full_name} ${x.display_name}`.toLowerCase().includes(q.toLowerCase()),
-        ) ?? [],
-    [data.data, q, consecrationId],
+        .filter((row) => !consecrationId || row.enrollment)
+        .filter(({ user }) =>
+          `${user.profile?.full_name || ""} ${user.email} ${user.profile?.phone || user.authPhone || ""}`
+            .toLowerCase()
+            .includes(search.toLowerCase()),
+        ),
+    [query.data, consecrationId, search],
   );
-  if (data.isLoading) return <LoadingState />;
-  if (data.error) return <ErrorState message={data.error.message} />;
-  if (mode === "activity") {
-    const selectedEnrollmentIds = new Set(
-      data
-        .data!.enrollments.filter((enrollment) =>
-          consecrationId ? enrollment.consecration_id === consecrationId : true,
-        )
-        .map((enrollment) => enrollment.id),
-    );
-    const activity = data.data!.progress.filter((entry) =>
-      consecrationId ? selectedEnrollmentIds.has(entry.user_consecration_id) : true,
-    );
-    return (
-      <Panel title="Actividad reciente">
-        {activity.length ? (
-          activity.slice(0, 40).map((x) => {
-            const p = data.data!.profiles.find((v) => v.id === x.user_id);
-            return (
-              <div key={x.id} className="flex gap-3 border-b border-white/10 py-3">
-                <CheckCircle2 className="text-emerald-700" />
-                <div className="text-sm">
-                  <b>{p?.display_name || p?.full_name || "Usuario"}</b>{" "}
-                  {x.completed ? "completó" : "actualizó"} el Día {x.day_number}
-                  <p className="text-xs text-[#667085]">
-                    {new Date(x.updated_at).toLocaleString("es-CO")}
-                  </p>
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <EmptyState
-            title="Sin actividad reciente"
-            description="La actividad aparecerá cuando un usuario guarde o complete el avance de un día."
-          />
-        )}
-      </Panel>
-    );
-  }
+
+  if (query.isLoading) return <LoadingState />;
+  if (query.error) return <ErrorState message={query.error.message} />;
+  if (mode === "activity") return <Activity data={query.data!} consecrationId={consecrationId} />;
+
+  const open = (user: AdminUser) => {
+    setSelected(user);
+    setCreating(false);
+    setReason("");
+    setConfirmation("");
+    setTemporaryPassword("acceso123");
+    setForm({
+      ...blank,
+      fullName: user.profile?.full_name || "",
+      displayName: user.profile?.display_name || "",
+      email: user.email,
+      phone: user.profile?.phone || user.authPhone || "",
+      city: user.profile?.city || "",
+      country: user.profile?.country || "Colombia",
+      parish: user.profile?.parish || "",
+      role: user.roles.find((r) => r !== "user") || "user",
+      consecrationId: user.enrollments[0]?.consecration_id || "",
+      startDate: user.enrollments[0]?.start_date || blank.startDate,
+    });
+  };
+  const close = () => {
+    setSelected(null);
+    setCreating(false);
+  };
+  const save = async () => {
+    if (creating) await mutation.mutateAsync({ action: "create", ...form });
+    else if (selected) {
+      await mutation.mutateAsync({ action: "update", userId: selected.id, ...form });
+      if (!selected.superAdmin)
+        await mutation.mutateAsync({ action: "role", userId: selected.id, role: form.role });
+    }
+    close();
+  };
+
   return (
-    <Panel
-      title="Usuarios e inscripciones"
-      action={
-        <div className="relative">
-          <Search className="absolute left-3 top-2.5 size-4" />
-          <Input
-            className="h-9 w-60 pl-9"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar usuario"
-          />
-        </div>
-      }
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-sm">
-          <thead className="text-left text-xs uppercase text-[#52657a]">
-            <tr>
-              <th className="py-3">Usuario</th>
-              <th>Consagración</th>
-              <th>Día</th>
-              <th>Progreso</th>
-              <th>Estado</th>
-              <th>Privilegios</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/10">
-            {rows.map((x) => (
-              <tr key={x.id}>
-                <td className="py-3">
-                  <span className="flex items-center gap-2">
-                    {x.superAdmin ? <ShieldCheck className="text-[#8a6200]" /> : <UserRound />}
-                    <span>
-                      {x.display_name || x.full_name || "Sin nombre"}
-                      {x.superAdmin && (
-                        <small className="block font-medium text-[#8a6200]">
-                          Superadministrador
-                        </small>
-                      )}
+    <>
+      <Panel
+        title={`Usuarios registrados · ${rows.length}`}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 size-4" />
+              <Input
+                className="h-9 w-64 pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Nombre, correo o teléfono"
+              />
+            </div>
+            <Button
+              className="bg-[#d8a72e] text-[#13263b]"
+              onClick={() => {
+                setForm({ ...blank, consecrationId: consecrationId || "" });
+                setCreating(true);
+              }}
+            >
+              <Plus className="mr-2 size-4" />
+              Agregar
+            </Button>
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px] text-sm">
+            <thead className="text-left text-xs uppercase text-[#52657a]">
+              <tr>
+                <th className="py-3">Usuario</th>
+                <th>Contacto</th>
+                <th>Consagración</th>
+                <th>Día</th>
+                <th>Progreso</th>
+                <th>Estado</th>
+                <th>Rol</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/10">
+              {rows.map(({ user, enrollment, consecration, completed, percent }) => (
+                <tr
+                  key={user.id}
+                  onClick={() => open(user)}
+                  className="cursor-pointer hover:bg-[#d8a72e]/10"
+                >
+                  <td className="py-3">
+                    <span className="flex items-center gap-2">
+                      {user.superAdmin ? <ShieldCheck className="text-[#8a6200]" /> : <UserRound />}
+                      <span>
+                        <b>
+                          {user.profile?.display_name || user.profile?.full_name || "Sin nombre"}
+                        </b>
+                        <small className="block text-[#667085]">{user.email}</small>
+                      </span>
                     </span>
-                  </span>
-                </td>
-                <td>{x.cons?.title || "Sin inscripción"}</td>
-                <td>{x.enrollment?.current_day || "—"}</td>
-                <td>
-                  {x.completed} · {x.percent}%
-                </td>
-                <td>{x.enrollment?.status || "—"}</td>
-                <td>
-                  {x.superAdmin ? (
-                    <b className="text-[#8a6200]">admin</b>
-                  ) : (
-                    <Select
-                      value={x.role}
-                      onValueChange={(role) =>
-                        changeRole.mutate({ id: x.id, role: role as AppRole })
+                  </td>
+                  <td>{user.profile?.phone || user.authPhone || "—"}</td>
+                  <td>{consecration?.title || "Sin inscripción"}</td>
+                  <td>{enrollment?.current_day || "—"}</td>
+                  <td>
+                    {completed} · {percent}%
+                  </td>
+                  <td
+                    className={
+                      user.bannedUntil
+                        ? "font-semibold text-red-700"
+                        : "font-semibold text-emerald-700"
+                    }
+                  >
+                    {user.bannedUntil ? "Bloqueado" : enrollment?.status || "Activo"}
+                  </td>
+                  <td>
+                    {user.superAdmin
+                      ? "Superadministrador"
+                      : user.roles.find((r) => r !== "user") || "Usuario"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!rows.length && (
+            <EmptyState
+              title="No hay coincidencias"
+              description="Prueba otro término de búsqueda."
+            />
+          )}
+        </div>
+      </Panel>
+      <Dialog open={creating || !!selected} onOpenChange={(value) => !value && close()}>
+        <DialogContent className="max-h-[92dvh] max-w-4xl overflow-y-auto bg-[#f7f6f2] text-[#16263a]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {creating ? "Agregar usuario" : "Ficha integral del usuario"}
+            </DialogTitle>
+            <DialogDescription>
+              Administra datos, acceso y privilegios desde una sola pantalla.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Nombre completo">
+              <Input
+                value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+              />
+            </Field>
+            <Field label="Nombre para mostrar">
+              <Input
+                value={form.displayName}
+                onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+              />
+            </Field>
+            <Field label="Correo">
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </Field>
+            <Field label="Teléfono">
+              <Input
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </Field>
+            <Field label="Ciudad">
+              <Input
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+              />
+            </Field>
+            <Field label="País">
+              <Input
+                value={form.country}
+                onChange={(e) => setForm({ ...form, country: e.target.value })}
+              />
+            </Field>
+            <Field label="Parroquia o comunidad">
+              <Input
+                value={form.parish}
+                onChange={(e) => setForm({ ...form, parish: e.target.value })}
+              />
+            </Field>
+            <Field label="Privilegios">
+              <Select
+                value={form.role}
+                disabled={selected?.superAdmin}
+                onValueChange={(v) => setForm({ ...form, role: v as AppRole })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Usuario</SelectItem>
+                  <SelectItem value="companion">Acompañante</SelectItem>
+                  <SelectItem value="editor">Editor</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            {creating && (
+              <>
+                <Field label="Contraseña provisional">
+                  <Input
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  />
+                </Field>
+                <Field label="Consagración">
+                  <Select
+                    value={form.consecrationId || "none"}
+                    onValueChange={(v) =>
+                      setForm({ ...form, consecrationId: v === "none" ? "" : v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin inscripción</SelectItem>
+                      {query.data?.consecrations.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </>
+            )}
+          </div>
+          {!creating && selected && (
+            <div className="space-y-4">
+              <div className="grid gap-3 rounded-xl border bg-white p-4 text-sm sm:grid-cols-3">
+                <Info label="Correo confirmado" value={selected.emailConfirmedAt ? "Sí" : "No"} />
+                <Info
+                  label="Último ingreso"
+                  value={
+                    selected.lastSignInAt
+                      ? new Date(selected.lastSignInAt).toLocaleString("es-CO")
+                      : "Sin ingreso"
+                  }
+                />
+                <Info
+                  label="Creación"
+                  value={new Date(selected.createdAt).toLocaleDateString("es-CO")}
+                />
+              </div>
+              <section className="rounded-xl border bg-white p-4">
+                <b>Contraseña provisional</b>
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    value={temporaryPassword}
+                    onChange={(e) => setTemporaryPassword(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      mutation.mutate({
+                        action: "password",
+                        userId: selected.id,
+                        password: temporaryPassword,
+                      })
+                    }
+                  >
+                    <KeyRound className="mr-2 size-4" />
+                    Restablecer
+                  </Button>
+                </div>
+              </section>
+              {!selected.superAdmin && (
+                <section className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4">
+                  <b className="text-red-900">Seguridad y depuración</b>
+                  <Textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Motivo obligatorio"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={!reason}
+                      onClick={() =>
+                        mutation.mutate({
+                          action: selected.bannedUntil ? "unblock" : "block",
+                          userId: selected.id,
+                          reason,
+                        })
                       }
                     >
-                      <SelectTrigger className="h-8 w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">Usuario</SelectItem>
-                        <SelectItem value="companion">Acompañante</SelectItem>
-                        <SelectItem value="editor">Editor</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {!rows.length && (
-          <EmptyState
-            title={consecrationId ? "No hay usuarios inscritos" : "No hay usuarios registrados"}
-            description={
-              consecrationId
-                ? "Todavía no hay inscripciones para la consagración seleccionada."
-                : "Los usuarios aparecerán aquí cuando creen su cuenta."
-            }
-          />
-        )}
-      </div>
+                      <Ban className="mr-2 size-4" />
+                      {selected.bannedUntil ? "Desbloquear" : "Bloquear acceso"}
+                    </Button>
+                    <Input
+                      className="max-w-44"
+                      value={confirmation}
+                      onChange={(e) => setConfirmation(e.target.value)}
+                      placeholder="Escribe ELIMINAR"
+                    />
+                    <Button
+                      variant="destructive"
+                      disabled={!reason || confirmation !== "ELIMINAR"}
+                      onClick={async () => {
+                        await mutation.mutateAsync({
+                          action: "delete",
+                          userId: selected.id,
+                          reason,
+                          confirmation,
+                        });
+                        close();
+                      }}
+                    >
+                      <Trash2 className="mr-2 size-4" />
+                      Eliminar definitivamente
+                    </Button>
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={close}>
+              Cancelar
+            </Button>
+            <Button
+              className="bg-[#d8a72e] text-[#13263b]"
+              disabled={mutation.isPending}
+              onClick={save}
+            >
+              {creating ? "Crear usuario" : "Guardar cambios"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function Activity({ data, consecrationId }: { data: AdminData; consecrationId?: string }) {
+  const activity = data.progress
+    .filter(
+      (p) =>
+        !consecrationId ||
+        data.users
+          .find((u) => u.id === p.user_id)
+          ?.enrollments.some(
+            (e) => e.id === p.user_consecration_id && e.consecration_id === consecrationId,
+          ),
+    )
+    .slice(0, 40);
+  return (
+    <Panel title="Actividad reciente">
+      {activity.length ? (
+        activity.map((p) => {
+          const u = data.users.find((x) => x.id === p.user_id);
+          return (
+            <div key={p.id} className="flex gap-3 border-b border-black/10 py-3">
+              <CheckCircle2 className="text-emerald-700" />
+              <div className="text-sm">
+                <b>{u?.profile?.display_name || u?.profile?.full_name || u?.email}</b>{" "}
+                {p.completed ? "completó" : "actualizó"} el Día {p.day_number}
+                <small className="block text-[#667085]">
+                  {new Date(p.updated_at).toLocaleString("es-CO")}
+                </small>
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <EmptyState title="Sin actividad reciente" description="Aún no hay avances registrados." />
+      )}
     </Panel>
+  );
+}
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      {children}
+    </div>
+  );
+}
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <small className="block text-[#667085]">{label}</small>
+      <span>{value}</span>
+    </div>
   );
 }
 function Panel({
@@ -248,7 +543,7 @@ function Panel({
 }) {
   return (
     <section className="surface-sacred rounded-2xl border border-white/10">
-      <header className="flex min-h-14 items-center justify-between border-b border-white/10 px-4">
+      <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-2">
         <h2 className="font-semibold">{title}</h2>
         {action}
       </header>
