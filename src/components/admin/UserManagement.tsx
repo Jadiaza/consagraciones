@@ -331,14 +331,22 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
                 disabled={selected?.superAdmin}
                 onValueChange={(v) => setForm({ ...form, role: v as AppRole })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white text-[#16263a] [&>span]:block [&>span]:overflow-visible [&>span]:text-[#16263a]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">Usuario</SelectItem>
-                  <SelectItem value="companion">Acompañante</SelectItem>
-                  <SelectItem value="editor">Editor</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
+                <SelectContent className="bg-white text-[#16263a]">
+                  <SelectItem className="focus:bg-[#f3e8c8] focus:text-[#16263a]" value="user">
+                    Usuario
+                  </SelectItem>
+                  <SelectItem className="focus:bg-[#f3e8c8] focus:text-[#16263a]" value="companion">
+                    Acompañante
+                  </SelectItem>
+                  <SelectItem className="focus:bg-[#f3e8c8] focus:text-[#16263a]" value="editor">
+                    Editor
+                  </SelectItem>
+                  <SelectItem className="focus:bg-[#f3e8c8] focus:text-[#16263a]" value="admin">
+                    Administrador
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -357,13 +365,19 @@ export function UserManagement({ mode, consecrationId }: { mode: Mode; consecrat
                       setForm({ ...form, consecrationId: v === "none" ? "" : v })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white text-[#16263a] [&>span]:block [&>span]:overflow-visible [&>span]:text-[#16263a]">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin inscripción</SelectItem>
+                    <SelectContent className="bg-white text-[#16263a]">
+                      <SelectItem className="focus:bg-[#f3e8c8] focus:text-[#16263a]" value="none">
+                        Sin inscripción
+                      </SelectItem>
                       {query.data?.consecrations.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
+                        <SelectItem
+                          className="focus:bg-[#f3e8c8] focus:text-[#16263a]"
+                          key={c.id}
+                          value={c.id}
+                        >
                           {c.title}
                         </SelectItem>
                       ))}
