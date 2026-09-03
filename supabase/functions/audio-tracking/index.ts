@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.2";
 
 const allowedOrigins = new Set([
   "https://lvj-audios.vercel.app",
+  "https://consagraciones.vercel.app",
   "http://localhost:3000",
   "http://localhost:4173",
 ]);
@@ -69,37 +70,97 @@ Deno.serve(async (req) => {
   const payload = await req.json().catch(() => ({}));
   const action = String(payload.action || "");
 
-  if (action === "adminReport") {
+  const requireAdmin = async () => {
     const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-    const { data: actorData } = await admin.auth.getUser(token);
+    const { data: actorData, error: actorError } = await admin.auth.getUser(token);
     const actorId = actorData.user?.id;
-    if (!actorId) return json(req, { error: "No autorizado" }, 401);
-    const [{ data: roles }, { data: superAdmin }] = await Promise.all([
-      admin.from("user_roles").select("role").eq("user_id", actorId),
-      admin.from("super_admins").select("user_id").eq("user_id", actorId).maybeSingle(),
-    ]);
-    if (!superAdmin && !roles?.some((row) => row.role === "admin"))
-      return json(req, { error: "Solo el administrador puede consultar este reporte." }, 403);
+    if (actorError || !actorId) return null;
+    const [{ data: roles, error: roleError }, { data: superAdmin, error: superError }] =
+      await Promise.all([
+        admin.from("user_roles").select("role").eq("user_id", actorId),
+        admin.from("super_admins").select("user_id").eq("user_id", actorId).maybeSingle(),
+      ]);
+    if (roleError || superError) throw roleError || superError;
+    return superAdmin || roles?.some((row) => row.role === "admin") ? actorId : null;
+  };
 
-    const { data: rows, error } = await admin
-      .from("audio_listener_progress")
-      .select(
-        "id,user_id,user_consecration_id,day_number,listened_seconds,listened_percent,last_position_seconds,status,completed_at,updated_at",
-      )
-      .order("updated_at", { ascending: false });
-    if (error) return json(req, { error: "No fue posible consultar el seguimiento." }, 500);
-    const userIds = [...new Set((rows || []).map((row) => row.user_id))];
-    const { data: profiles } = userIds.length
-      ? await admin.from("profiles").select("id,full_name,display_name").in("id", userIds)
-      : { data: [] };
+  if (action === "adminReport" || action === "adminRegenerateCode") {
+    const actorId = await requireAdmin();
+    if (!actorId)
+      return json(req, { error: "Solo el administrador puede gestionar este reporte." }, 403);
+
+    if (action === "adminRegenerateCode") {
+      const accessId = String(payload.accessId || "");
+      if (!accessId) return json(req, { error: "Registro no especificado." }, 400);
+      const raw = randomText(8);
+      const code = `SM-${raw.slice(0, 4)}-${raw.slice(4)}`;
+      const { data: access, error: accessError } = await admin
+        .from("audio_access_codes")
+        .update({
+          code_hash: await hash(code),
+          code_hint: code.slice(-4),
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", accessId)
+        .select("id")
+        .single();
+      if (accessError) return json(req, { error: "No fue posible generar el código." }, 400);
+      await admin.from("audio_access_sessions").delete().eq("access_code_id", access.id);
+      await admin.from("audit_logs").insert({
+        actor_id: actorId,
+        action: "audio_access_code_regenerated",
+        entity_type: "audio_access_code",
+        entity_id: access.id,
+      });
+      return json(req, { ok: true, code });
+    }
+
+    const [{ data: codes, error: codesError }, { data: progress, error: progressError }] =
+      await Promise.all([
+        admin
+          .from("audio_access_codes")
+          .select("id,user_id,user_consecration_id,code_hint,is_active,created_at,last_used_at")
+          .order("created_at", { ascending: false }),
+        admin
+          .from("audio_listener_progress")
+          .select(
+            "id,user_id,user_consecration_id,day_number,listened_seconds,listened_percent,last_position_seconds,status,completed_at,updated_at",
+          )
+          .order("updated_at", { ascending: false }),
+      ]);
+    if (codesError || progressError)
+      return json(req, { error: "No fue posible consultar el seguimiento." }, 500);
+    const userIds = [...new Set((codes || []).map((row) => row.user_id))];
+    const [{ data: profiles }, authResult] = await Promise.all([
+      userIds.length
+        ? admin
+            .from("profiles")
+            .select("id,full_name,display_name,phone,city,country,parish")
+            .in("id", userIds)
+        : Promise.resolve({ data: [] }),
+      admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    ]);
+    if (authResult.error)
+      return json(req, { error: "No fue posible consultar los usuarios." }, 500);
     return json(req, {
-      rows: (rows || []).map((row) => ({
-        ...row,
-        user_name:
-          profiles?.find((profile) => profile.id === row.user_id)?.display_name ||
-          profiles?.find((profile) => profile.id === row.user_id)?.full_name ||
-          "Peregrino",
-      })),
+      participants: (codes || []).map((access) => {
+        const profile = profiles?.find((item) => item.id === access.user_id);
+        const user = authResult.data.users.find((item) => item.id === access.user_id);
+        return {
+          ...access,
+          full_name: profile?.full_name || "",
+          display_name: profile?.display_name || profile?.full_name || "Peregrino",
+          email: user?.email || "",
+          phone: profile?.phone || user?.phone || "",
+          city: profile?.city || "",
+          country: profile?.country || "Colombia",
+          parish: profile?.parish || "",
+          progress: (progress || []).filter(
+            (row) => row.user_consecration_id === access.user_consecration_id,
+          ),
+        };
+      }),
     });
   }
 
