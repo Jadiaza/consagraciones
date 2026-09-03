@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
   HandHeart,
+  Headphones,
   Save,
   Search,
   ShieldCheck,
@@ -27,6 +28,7 @@ import { StageDayManager } from "@/components/admin/StageDayManager";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { StructuredContentEditor } from "@/components/admin/StructuredContentEditor";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { AudioTrackingReport } from "@/components/admin/AudioTrackingReport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +57,7 @@ type Section =
   | "prayers"
   | "resources"
   | "users"
+  | "audio"
   | "activity";
 type ContentKind = "prayers" | "resources";
 type Consecration = {
@@ -262,6 +265,7 @@ function AdminPage() {
               <ActivityReport {...(selectedId ? { consecrationId: selectedId } : {})} />
             </Suspense>
           )}
+          {section === "audio" && <AudioTrackingReport />}
           {(section === "prayers" || section === "resources") && selectedId && (
             <div className="space-y-5">
               {section === "prayers" && <CoronillaAudioManager consecrationId={selectedId} />}
@@ -361,6 +365,7 @@ const titles: Record<Section, string> = {
   prayers: "Gestión de oraciones",
   resources: "Gestión de recursos",
   users: "Usuarios e inscripciones",
+  audio: "Seguimiento de audios",
   activity: "Seguimiento de actividad",
 };
 function Sidebar({
@@ -382,6 +387,7 @@ function Sidebar({
     ["prayers", "Oraciones", HandHeart],
     ["resources", "Recursos", FileText],
     ["users", "Usuarios", Users],
+    ["audio", "Audios", Headphones],
     ["activity", "Actividad", Activity],
   ];
   return (
