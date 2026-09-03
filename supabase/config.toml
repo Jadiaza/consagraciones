@@ -1,1 +1,4 @@
 project_id = "zcfnquusvkrkqjeusmly"
+
+[functions.audio-tracking]
+verify_jwt = false
