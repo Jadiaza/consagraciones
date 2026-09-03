@@ -167,6 +167,19 @@ export function AudioTrackingReport() {
                       <span className="block font-semibold">
                         {completedDays.length} días cumplidos
                       </span>
+                      <div
+                        className="my-2 h-2 w-36 overflow-hidden rounded-full bg-[#e8e4da]"
+                        role="progressbar"
+                        aria-label={`Avance de ${person.display_name}`}
+                        aria-valuemin={0}
+                        aria-valuemax={33}
+                        aria-valuenow={completedDays.length}
+                      >
+                        <div
+                          className="h-full rounded-full bg-[#0aa06e] transition-[width]"
+                          style={{ width: `${Math.min(100, (completedDays.length / 33) * 100)}%` }}
+                        />
+                      </div>
                       <span className="text-[#667085]">
                         {latest
                           ? `Día ${latest.day_number}: ${Math.round(latest.listened_percent)} %`
@@ -257,23 +270,7 @@ export function AudioTrackingReport() {
                   Generar nuevo código
                 </Button>
               </div>
-              <div className="rounded-xl border border-[#e5e9ef] p-4">
-                <Label>Detalle del avance</Label>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selected.progress.length ? (
-                    selected.progress.map((item) => (
-                      <span key={item.id} className="rounded-full bg-[#f8f6f1] px-3 py-1 text-xs">
-                        Día {item.day_number}: {Math.round(item.listened_percent)} %
-                        {item.status === "completed" ? " · Cumplido" : ""}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-[#667085]">
-                      Todavía no ha iniciado ningún audio.
-                    </span>
-                  )}
-                </div>
-              </div>
+              <AudioJourney progress={selected.progress} />
             </div>
           )}
           <DialogFooter>
@@ -290,6 +287,81 @@ export function AudioTrackingReport() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function AudioJourney({ progress }: { progress: Progress[] }) {
+  const byDay = new Map(progress.map((item) => [item.day_number, item]));
+  const completedDays = progress.filter((item) => item.status === "completed").length;
+  const overallPercent = Math.round((completedDays / 33) * 100);
+
+  return (
+    <div className="rounded-xl border border-[#e5e9ef] p-4">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <Label>Seguimiento de audios</Label>
+          <p className="mt-1 text-sm text-[#667085]">
+            {completedDays} de 33 días cumplidos · {overallPercent} % del camino
+          </p>
+        </div>
+        <strong className="text-2xl text-[#0b2942]">{overallPercent} %</strong>
+      </div>
+      <div
+        className="mt-3 h-3 overflow-hidden rounded-full bg-[#e8e4da]"
+        role="progressbar"
+        aria-label="Progreso general de audios"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={overallPercent}
+      >
+        <div
+          className="h-full rounded-full bg-[#0aa06e] transition-[width]"
+          style={{ width: `${overallPercent}%` }}
+        />
+      </div>
+      <div className="mt-4 grid grid-cols-6 gap-2 sm:grid-cols-11">
+        {Array.from({ length: 33 }, (_, index) => {
+          const day = index + 1;
+          const item = byDay.get(day);
+          const completed = item?.status === "completed";
+          const started = Boolean(item) && !completed;
+          const percent = Math.round(item?.listened_percent || 0);
+          return (
+            <div
+              key={day}
+              className={`grid aspect-square min-h-10 place-items-center rounded-lg border text-xs font-semibold ${
+                completed
+                  ? "border-[#0aa06e] bg-[#0aa06e] text-white"
+                  : started
+                    ? "border-[#d8a72e] bg-[#fff4cf] text-[#815b00]"
+                    : "border-[#ddd8cc] bg-[#faf9f6] text-[#667085]"
+              }`}
+              title={
+                completed
+                  ? `Día ${day}: cumplido`
+                  : started
+                    ? `Día ${day}: ${percent} % escuchado`
+                    : `Día ${day}: sin iniciar`
+              }
+            >
+              <span>{day}</span>
+              {started && <small className="-mt-1 text-[9px] leading-none">{percent}%</small>}
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#667085]">
+        <span className="flex items-center gap-1.5">
+          <i className="size-2.5 rounded-full bg-[#0aa06e]" /> Cumplido
+        </span>
+        <span className="flex items-center gap-1.5">
+          <i className="size-2.5 rounded-full bg-[#d8a72e]" /> En progreso
+        </span>
+        <span className="flex items-center gap-1.5">
+          <i className="size-2.5 rounded-full border border-[#bbb5a8] bg-[#faf9f6]" /> Sin iniciar
+        </span>
+      </div>
     </div>
   );
 }
