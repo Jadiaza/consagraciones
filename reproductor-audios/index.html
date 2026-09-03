@@ -31,13 +31,71 @@
           <p class="eyebrow">La Voz de Jesús · Enseñanzas</p>
           <h1>33 días con los Santos Arcángeles</h1>
         </div>
-        <a class="app-link" href="https://consagraciones.vercel.app" target="_blank" rel="noreferrer">
+        <a
+          class="app-link"
+          href="https://consagraciones.vercel.app"
+          target="_blank"
+          rel="noreferrer"
+        >
           Ir a la aplicación
         </a>
       </div>
     </header>
 
-    <main class="layout">
+    <section id="access-gate" class="access-gate" aria-labelledby="access-title">
+      <div class="access-card">
+        <p class="eyebrow">Seguimiento personal</p>
+        <h2 id="access-title">Identifícate para guardar tu avance</h2>
+        <p>
+          Esta playlist está disponible únicamente para personas inscritas. En tu primera entrada
+          recibirás un código personal para recuperar el avance en otro dispositivo.
+        </p>
+        <form id="identify-form" class="access-form">
+          <label>
+            Nombre completo
+            <input id="identity-name" name="fullName" autocomplete="name" required />
+          </label>
+          <label>
+            Correo registrado
+            <input id="identity-email" name="email" type="email" autocomplete="email" required />
+          </label>
+          <button class="button gold" type="submit">Ingresar y generar mi código</button>
+        </form>
+        <form id="resume-form" class="access-form" hidden>
+          <label>
+            Correo registrado
+            <input id="resume-email" name="email" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            Código de peregrino
+            <input
+              id="resume-code"
+              name="code"
+              placeholder="SM-XXXX-XXXX"
+              autocomplete="off"
+              required
+            />
+          </label>
+          <button class="button gold" type="submit">Recuperar mi avance</button>
+        </form>
+        <button id="toggle-access-mode" class="text-button" type="button">
+          Ya tengo un código de peregrino
+        </button>
+        <p id="access-error" class="access-error" role="alert"></p>
+      </div>
+    </section>
+
+    <main id="audio-experience" class="layout" hidden>
+      <section class="participant-bar">
+        <div>
+          <small>Camino personal de</small>
+          <strong id="participant-name">Peregrino</strong>
+        </div>
+        <div class="participant-actions">
+          <span id="participant-code"></span>
+          <button id="leave-session" class="text-button" type="button">Cambiar usuario</button>
+        </div>
+      </section>
       <section class="player-card" aria-labelledby="episode-title">
         <div class="episode-cover">
           <div class="cover-image" aria-hidden="true"></div>
@@ -52,8 +110,23 @@
           <audio id="audio" preload="metadata"></audio>
           <div class="timeline">
             <span id="current-time">0:00</span>
-            <input id="progress" aria-label="Progreso del audio" type="range" min="0" max="0" value="0" />
+            <input
+              id="progress"
+              aria-label="Progreso del audio"
+              type="range"
+              min="0"
+              max="0"
+              value="0"
+            />
             <span id="duration">0:00</span>
+          </div>
+
+          <div class="listening-status" aria-live="polite">
+            <div>
+              <strong id="listening-percent">0 % escuchado</strong>
+              <span id="listening-message">Escucha la enseñanza para registrar tu avance.</span>
+            </div>
+            <div class="listening-meter"><span id="listening-meter-value"></span></div>
           </div>
 
           <div class="transport">
