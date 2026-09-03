@@ -14,6 +14,7 @@ let speedIndex = 1;
 let previousMediaTime = 0;
 let previousWallTime = 0;
 let lastHeartbeatAt = 0;
+let lastMediaRefreshAt = 0;
 const segmentListening = new Map();
 const pendingSegments = new Set();
 
@@ -98,9 +99,13 @@ function renderPlaylist() {
   for (const episode of episodes) {
     const unlocked = isDayUnlocked(episode.day);
     const done = completedDays.has(episode.day);
-    const button = document.createElement("button");
-    button.className = `episode-row${episode.day === currentDay ? " active" : ""}`;
-    button.disabled = !episode.available || !unlocked;
+    const isActive = episode.day === currentDay;
+    const row = document.createElement("div");
+    row.className = `episode-row${isActive ? " active" : ""}`;
+    const selection = document.createElement("button");
+    selection.type = "button";
+    selection.className = "episode-select";
+    selection.disabled = !episode.available || !unlocked;
     const number = document.createElement("span");
     number.className = "episode-number";
     number.textContent = done ? "✓" : String(episode.day);
@@ -117,15 +122,27 @@ function renderPlaylist() {
           ? "Cumplido mediante audio"
           : "Escuchar enseñanza";
     details.append(title, state);
-    button.append(number, details);
+    selection.append(number, details);
     if (episode.available && unlocked) {
-      const icon = document.createElement("span");
-      icon.className = "row-play";
-      icon.textContent = "▶";
-      button.append(icon);
-      button.addEventListener("click", () => selectEpisode(episode.day));
+      selection.addEventListener("click", () => selectEpisode(episode.day));
     }
-    playlist.append(button);
+    row.append(selection);
+    if (episode.available && unlocked && isActive) {
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "row-play-action";
+      action.textContent = audio.paused ? "▶ Reproducir" : "Ⅱ Pausar";
+      action.setAttribute(
+        "aria-label",
+        `${audio.paused ? "Reproducir" : "Pausar"} día ${episode.day}`,
+      );
+      action.addEventListener("click", () => {
+        if (audio.paused) audio.play().catch(() => flash("No fue posible iniciar el audio."));
+        else audio.pause();
+      });
+      row.append(action);
+    }
+    playlist.append(row);
   }
 }
 
@@ -140,7 +157,10 @@ function updateListeningStatus() {
       : "El día se cumple al escuchar al menos el 85 %.";
 }
 
-async function refreshEpisodes({ preserveSelection = true } = {}) {
+async function refreshEpisodes({ preserveSelection = true, refreshMedia = false } = {}) {
+  const refreshSelectedAudio =
+    refreshMedia && audio.paused && Date.now() - lastMediaRefreshAt >= 5_000;
+  if (refreshSelectedAudio) lastMediaRefreshAt = Date.now();
   try {
     const freshEpisodes = await window.loadAudioEpisodes();
     const changed = JSON.stringify(freshEpisodes) !== JSON.stringify(episodes);
@@ -163,7 +183,8 @@ async function refreshEpisodes({ preserveSelection = true } = {}) {
     if (!selected?.available || !isDayUnlocked(currentDay)) {
       currentDay = available.filter((episode) => isDayUnlocked(episode.day)).at(-1)?.day || 1;
     }
-    if (participant && (!preserveSelection || changed)) selectEpisode(currentDay);
+    if (participant && (!preserveSelection || changed || refreshSelectedAudio))
+      selectEpisode(currentDay);
     else renderPlaylist();
   } catch (error) {
     console.error(error);
@@ -188,7 +209,9 @@ function selectEpisode(day, autoplay = false) {
   document.querySelector("#episode-title").textContent = episode.title;
   document.querySelector("#episode-summary").textContent = episode.summary;
   document.querySelector("#daily-route").href = `https://consagraciones.vercel.app/dia/${day}`;
-  audio.src = episode.audioUrl;
+  const freshAudioUrl = new URL(episode.audioUrl);
+  freshAudioUrl.searchParams.set("lvj-version", String(Date.now()));
+  audio.src = freshAudioUrl.toString();
   audio.load();
   history.replaceState({}, "", `${location.pathname}?dia=${day}`);
   renderPlaylist();
@@ -270,12 +293,14 @@ audio.addEventListener("play", () => {
   playButton.setAttribute("aria-label", "Pausar");
   previousWallTime = performance.now();
   previousMediaTime = audio.currentTime;
+  renderPlaylist();
 });
 
 audio.addEventListener("pause", () => {
   playButton.textContent = "▶";
   playButton.setAttribute("aria-label", "Reproducir");
   previousWallTime = 0;
+  renderPlaylist();
   void sendHeartbeat(true);
 });
 
@@ -405,8 +430,8 @@ if (sessionToken) {
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") void refreshEpisodes();
+  if (document.visibilityState === "visible") void refreshEpisodes({ refreshMedia: true });
   else void sendHeartbeat(true);
 });
-window.addEventListener("focus", () => void refreshEpisodes());
+window.addEventListener("focus", () => void refreshEpisodes({ refreshMedia: true }));
 window.setInterval(() => void refreshEpisodes(), 60_000);
