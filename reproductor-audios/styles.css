@@ -406,16 +406,14 @@ input[type="range"] {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 5px;
   border: 1px solid transparent;
   border-radius: 17px;
   background: transparent;
   color: #fff;
-  text-align: left;
-  cursor: pointer;
 }
-.episode-row:hover:not(:disabled) {
+.episode-row:hover {
   background: #ffffff08;
   border-color: #ffffff12;
 }
@@ -423,7 +421,20 @@ input[type="range"] {
   background: #d6aa5218;
   border-color: #d6aa5277;
 }
-.episode-row:disabled {
+.episode-select {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.episode-select:disabled {
   opacity: 0.42;
   cursor: default;
 }
@@ -457,8 +468,18 @@ input[type="range"] {
   margin-top: 5px;
   color: var(--muted);
 }
-.row-play {
-  color: var(--gold-light);
+.row-play-action {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid #e9c76f;
+  border-radius: 999px;
+  background: var(--gold-light);
+  color: var(--night);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 18px #00000028;
 }
 
 footer {
@@ -563,6 +584,11 @@ footer strong {
   }
   .access-card {
     padding: 25px 20px;
+  }
+  .row-play-action {
+    min-height: 36px;
+    padding: 7px 10px;
+    font-size: 11px;
   }
   .listening-status > div:first-child {
     flex-direction: column;
