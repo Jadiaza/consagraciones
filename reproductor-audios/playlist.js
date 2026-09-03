@@ -54,11 +54,13 @@ const EMPTY_EPISODES = TITLES.map((title, index) => ({
     SUMMARIES[index + 1] ||
     "La enseñanza de este día estará disponible próximamente como parte del camino espiritual de la Consagración.",
   audioUrl: "",
+  mediaAssetId: "",
   durationSeconds: 0,
 }));
 
 window.loadAudioEpisodes = async function loadAudioEpisodes() {
   const select = [
+    "id",
     "public_url",
     "storage_key",
     "duration_seconds",
@@ -98,6 +100,7 @@ window.loadAudioEpisodes = async function loadAudioEpisodes() {
       title: record.consecration_days?.title || episode.title,
       available: true,
       audioUrl: record.public_url,
+      mediaAssetId: record.id,
       durationSeconds: Number(record.duration_seconds || 0),
     };
   });
