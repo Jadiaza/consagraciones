@@ -21,6 +21,7 @@ type Progress = {
   day_number: number;
   listened_percent: number;
   status: "started" | "in_progress" | "completed";
+  completed_at: string | null;
   updated_at: string;
 };
 type Participant = {
@@ -65,6 +66,7 @@ async function invoke(functionName: string, body: Record<string, unknown>) {
 export function AudioTrackingReport() {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Participant | null>(null);
+  const [reportSelected, setReportSelected] = useState<Participant | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [newCode, setNewCode] = useState("");
   const report = useQuery({
@@ -157,7 +159,15 @@ export function AudioTrackingReport() {
                 const latest = person.progress[0];
                 return (
                   <tr key={person.id} className="hover:bg-[#d8a72e]/5">
-                    <td className="px-4 py-4 font-semibold">{person.display_name}</td>
+                    <td className="px-4 py-4 font-semibold">
+                      <button
+                        type="button"
+                        className="text-left text-[#0b2942] underline decoration-[#d8a72e] decoration-2 underline-offset-4 hover:text-[#9a6b00]"
+                        onClick={() => setReportSelected(person)}
+                      >
+                        {person.display_name}
+                      </button>
+                    </td>
                     <td className="px-4 py-4">
                       <span className="block">{person.email}</span>
                       <span className="text-[#667085]">{person.phone || "Sin teléfono"}</span>
@@ -270,7 +280,6 @@ export function AudioTrackingReport() {
                   Generar nuevo código
                 </Button>
               </div>
-              <AudioJourney progress={selected.progress} />
             </div>
           )}
           <DialogFooter>
@@ -283,6 +292,26 @@ export function AudioTrackingReport() {
               onClick={() => selected && form && save.mutate({ ...form, userId: selected.user_id })}
             >
               Guardar cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(reportSelected)}
+        onOpenChange={(open) => !open && setReportSelected(null)}
+      >
+        <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Seguimiento de audios · {reportSelected?.display_name}</DialogTitle>
+            <DialogDescription>
+              Avance registrado en la playlist y fecha de finalización de cada audio.
+            </DialogDescription>
+          </DialogHeader>
+          {reportSelected && <AudioJourney progress={reportSelected.progress} />}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReportSelected(null)}>
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -351,6 +380,31 @@ function AudioJourney({ progress }: { progress: Progress[] }) {
           );
         })}
       </div>
+      {completedDays > 0 && (
+        <div className="mt-5 overflow-hidden rounded-xl border border-[#e5e9ef]">
+          <div className="bg-[#f8f6f1] px-4 py-2 text-sm font-semibold text-[#0b2942]">
+            Finalización de los audios
+          </div>
+          <div className="divide-y divide-[#edf0f3]">
+            {progress
+              .filter((item) => item.status === "completed")
+              .sort((a, b) => a.day_number - b.day_number)
+              .map((item) => (
+                <div
+                  key={item.id}
+                  className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
+                >
+                  <span className="font-semibold text-[#0b2942]">
+                    Audio del día {item.day_number}
+                  </span>
+                  <span className="text-[#667085]">
+                    {formatDate(item.completed_at || item.updated_at)}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#667085]">
         <span className="flex items-center gap-1.5">
           <i className="size-2.5 rounded-full bg-[#0aa06e]" /> Cumplido
