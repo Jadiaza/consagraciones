@@ -140,6 +140,7 @@ export type Database = {
           meditation: string | null
           motto: string | null
           objective: string | null
+          playlist_summary: string | null
           prayer: string | null
           progressive_consecration: string | null
           published_at: string | null
@@ -161,6 +162,7 @@ export type Database = {
           meditation?: string | null
           motto?: string | null
           objective?: string | null
+          playlist_summary?: string | null
           prayer?: string | null
           progressive_consecration?: string | null
           published_at?: string | null
@@ -182,6 +184,7 @@ export type Database = {
           meditation?: string | null
           motto?: string | null
           objective?: string | null
+          playlist_summary?: string | null
           prayer?: string | null
           progressive_consecration?: string | null
           published_at?: string | null

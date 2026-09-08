@@ -46,6 +46,7 @@ const emptyDay = {
   day_number: 1,
   title: "",
   subtitle: "",
+  playlist_summary: "",
   objective: "",
   motto: "",
   hero_image: "",
@@ -137,6 +138,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
           stage_id: dayForm.stage_id === "none" ? null : dayForm.stage_id,
           title: dayForm.title.trim(),
           subtitle: nullable(dayForm.subtitle),
+          playlist_summary: nullable(dayForm.playlist_summary),
           objective: nullable(dayForm.objective),
           motto: nullable(dayForm.motto),
           hero_image: nullable(dayForm.hero_image),
@@ -217,6 +219,7 @@ export function StageDayManager({ mode, consecrationId }: { mode: Mode; consecra
       day_number: item.day_number,
       title: item.title,
       subtitle: item.subtitle ?? "",
+      playlist_summary: item.playlist_summary ?? "",
       objective: item.objective ?? "",
       motto: item.motto ?? "",
       hero_image: item.hero_image ?? "",
@@ -596,6 +599,19 @@ function DayForm({
       <Field label="Subtítulo">
         <Input value={form.subtitle} onChange={(e) => set({ ...form, subtitle: e.target.value })} />
       </Field>
+      <Field label="Resumen para la playlist">
+        <Textarea
+          rows={4}
+          maxLength={700}
+          placeholder="Presentación pastoral breve de la enseñanza del día."
+          value={form.playlist_summary}
+          onChange={(e) => set({ ...form, playlist_summary: e.target.value })}
+        />
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Se muestra automáticamente en el reproductor independiente cuando el audio está activo.
+          Escribe dos o tres frases breves; no copies aquí todo el objetivo.
+        </p>
+      </Field>
       <Field label="Imagen de portada del día">
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="space-y-2">
@@ -764,6 +780,7 @@ function normalizeDayJson(value: unknown, allowedStageIds: string[]): typeof emp
     day_number: integer("day_number", 1, 33),
     title: text("title"),
     subtitle: text("subtitle"),
+    playlist_summary: text("playlist_summary"),
     objective: text("objective"),
     motto: text("motto"),
     hero_image: text("hero_image"),
