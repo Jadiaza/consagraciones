@@ -86,7 +86,7 @@ window.loadAudioEpisodes = async function loadAudioEpisodes() {
     "storage_key",
     "duration_seconds",
     "created_at",
-    "consecration_days!inner(day_number,title,objective,status)",
+    "consecration_days!inner(day_number,title,playlist_summary,objective,status)",
   ].join(",");
   const endpoint = new URL(`${SUPABASE_URL}/rest/v1/media_assets`);
   endpoint.searchParams.set("select", select);
@@ -119,7 +119,9 @@ window.loadAudioEpisodes = async function loadAudioEpisodes() {
     return {
       ...episode,
       title: record.consecration_days?.title || episode.title,
-      summary: descriptionFromObjective(record.consecration_days?.objective, episode.summary),
+      summary:
+        plainText(record.consecration_days?.playlist_summary) ||
+        descriptionFromObjective(record.consecration_days?.objective, episode.summary),
       available: true,
       audioUrl: record.public_url,
       mediaAssetId: record.id,
