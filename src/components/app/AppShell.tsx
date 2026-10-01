@@ -1,66 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, BookOpen, CalendarDays, ChevronLeft, CircleDot, Home, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { BookOpen, CalendarDays, ChevronLeft, CircleDot, Home, User } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
-
-const LVJ_ORIGINS = new Set([
-  "https://lavozdejesus.vercel.app",
-  "https://lavozdejesus.co",
-  "https://www.lavozdejesus.co",
-]);
-
-function useLvjIntegration() {
-  const [integrated, setIntegrated] = useState(false);
-  const [returnUrl, setReturnUrl] = useState("https://lavozdejesus.vercel.app/");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("from") !== "lvjprayer") return;
-
-    setIntegrated(true);
-
-    const requestedReturn = params.get("return");
-    if (!requestedReturn) return;
-
-    try {
-      const url = new URL(requestedReturn, window.location.origin);
-      if (LVJ_ORIGINS.has(url.origin)) {
-        setReturnUrl(url.toString());
-      }
-    } catch {
-      // Mantiene el destino seguro por defecto.
-    }
-  }, []);
-
-  return { integrated, returnUrl };
-}
-
-function LvJIntegrationBar({ returnUrl }: { returnUrl: string }) {
-  return (
-    <div className="lvj-integration-bar sticky top-0 z-50 flex min-h-12 items-center justify-between gap-3 border-b px-3 py-2">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="lvj-integration-bar__mark flex size-8 shrink-0 items-center justify-center rounded-full border">
-          ✦
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.18em]">
-            LVJPRAYER
-          </p>
-          <p className="truncate text-[11px] opacity-80">Estás dentro de Consagraciones</p>
-        </div>
-      </div>
-      <a
-        href={returnUrl}
-        className="lvj-integration-bar__back inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:opacity-90 focus-visible:outline-2"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        <span>Volver a LVJPRAYER</span>
-      </a>
-    </div>
-  );
-}
 
 export function SpiritualHeader({
   title,
@@ -143,15 +85,12 @@ export function AppShell({
   hideNav?: boolean | undefined;
   className?: string | undefined;
 }) {
-  const { integrated, returnUrl } = useLvjIntegration();
-
   return (
     <div className="app-shell relative min-h-dvh text-foreground">
       <div
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(201,154,61,.08),transparent_28rem)]"
         aria-hidden
       />
-      {integrated && <LvJIntegrationBar returnUrl={returnUrl} />}
       {(title || back || action) && <SpiritualHeader title={title} back={back} action={action} />}
       <main
         className={cn(
