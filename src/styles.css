@@ -1576,3 +1576,36 @@ html[data-app-theme="sepia"] {
     }
   }
 }
+
+
+/* Integración visual LVJPRAYER: solo se muestra al entrar desde LVJPRAYER. */
+.lvj-integration-bar {
+  position: relative;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+  background: linear-gradient(135deg, #061426 0%, #0b2442 100%);
+  border-bottom: 1px solid rgba(226, 184, 94, 0.5);
+}
+
+.lvj-integration-bar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(226, 184, 94, 0.45);
+  border-radius: 12px;
+  background: rgba(8, 28, 50, 0.96);
+  color: #f5d77d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.lvj-integration-bar__back:active {
+  transform: scale(0.98);
+}
