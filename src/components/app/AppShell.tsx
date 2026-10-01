@@ -19,8 +19,16 @@ function useLvjIntegration() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const fromLvj = params.get("from") === "lvjprayer";
+    const referrerIsLvj = (() => {
+      try {
+        const origin = new URL(document.referrer).origin;
+        return LVJ_ORIGINS.has(origin);
+      } catch {
+        return false;
+      }
+    })();
     const saved = sessionStorage.getItem("lvjprayer-integrated") === "1";
-    const active = fromLvj || saved;
+    const active = fromLvj || referrerIsLvj || saved;
 
     if (!active) return;
 
