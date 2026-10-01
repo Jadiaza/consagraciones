@@ -1,8 +1,62 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { BookOpen, CalendarDays, ChevronLeft, CircleDot, Home, User } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, ChevronLeft, CircleDot, Home, User } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+
+
+const LVJ_ORIGINS = new Set([
+  "https://lavozdejesus.vercel.app",
+  "https://lavozdejesus.co",
+  "https://www.lavozdejesus.co",
+]);
+
+function useLvjIntegration() {
+  const [integrated, setIntegrated] = useState(false);
+  const [returnUrl, setReturnUrl] = useState("https://lavozdejesus.vercel.app/");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fromLvj = params.get("from") === "lvjprayer";
+    const saved = sessionStorage.getItem("lvjprayer-integrated") === "1";
+    const active = fromLvj || saved;
+
+    if (!active) return;
+
+    const candidate = params.get("return");
+    if (candidate) {
+      try {
+        const parsed = new URL(candidate);
+        if (LVJ_ORIGINS.has(parsed.origin)) {
+          sessionStorage.setItem("lvjprayer-return-url", parsed.href);
+        }
+      } catch {
+        // Ignora retornos malformados.
+      }
+    }
+
+    sessionStorage.setItem("lvjprayer-integrated", "1");
+    setReturnUrl(sessionStorage.getItem("lvjprayer-return-url") || "https://lavozdejesus.vercel.app/");
+    setIntegrated(true);
+  }, []);
+
+  return { integrated, returnUrl };
+}
+
+function LvjIntegrationBar() {
+  const { integrated, returnUrl } = useLvjIntegration();
+  if (!integrated) return null;
+
+  return (
+    <div className="lvj-integration-bar" role="banner">
+      <a href={returnUrl} className="lvj-integration-bar__back">
+        <ArrowLeft className="size-4" aria-hidden />
+        <span>Volver a LVJPRAYER</span>
+      </a>
+    </div>
+  );
+}
 
 export function SpiritualHeader({
   title,
@@ -86,7 +140,7 @@ export function AppShell({
   className?: string | undefined;
 }) {
   return (
-    <div className="app-shell relative min-h-dvh text-foreground">
+    <div className="app-shell relative min-h-dvh text-foreground">\n      <LvjIntegrationBar />
       <div
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(201,154,61,.08),transparent_28rem)]"
         aria-hidden
