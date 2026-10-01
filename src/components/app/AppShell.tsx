@@ -99,6 +99,8 @@ const NAV = [
 ] as const;
 
 export function BottomNavigation() {
+  const { integrated, returnUrl } = useLvjIntegration();
+
   return (
     <nav
       aria-label="Navegación principal"
@@ -106,6 +108,18 @@ export function BottomNavigation() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="mx-auto flex max-w-2xl">
+        {integrated ? (
+          <li className="flex-1">
+            <a
+              href={returnUrl}
+              aria-label="Volver a LVJPRAYER"
+              className="bottom-navigation__link flex min-h-16 flex-col items-center justify-center gap-1 py-2 text-[11px] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
+            >
+              <ArrowLeft className="size-5" aria-hidden />
+              <span>LVJPRAYER</span>
+            </a>
+          </li>
+        ) : null}
         {NAV.map(({ to, label, icon: Icon }) => (
           <li key={to} className="flex-1">
             <Link
