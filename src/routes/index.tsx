@@ -35,7 +35,9 @@ function Bienvenida() {
   }, []);
 
   useEffect(() => {
-    if (!splash && !loading && session) void navigate({ to: "/dashboard", replace: true });
+    if (!splash && !loading && session?.user?.user_metadata?.must_change_password === true) {
+      void navigate({ to: "/auth/reset-password", replace: true });
+    }
   }, [splash, loading, session, navigate]);
 
   if (splash) {
@@ -120,20 +122,31 @@ function Bienvenida() {
           </p>
 
           <nav aria-label="Acciones de bienvenida" className="mt-6 flex flex-col gap-3">
-            <Link
-              to="/auth"
-              search={{ modo: "registro" }}
-              className="flex min-h-13 items-center justify-center rounded-xl bg-[linear-gradient(180deg,#e4bd68,#b98227)] px-5 text-sm font-semibold text-[#061426] shadow-[0_8px_24px_rgba(0,0,0,.25)] transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5d991]"
-            >
-              Comenzar mi consagración
-            </Link>
-            <Link
-              to="/auth"
-              search={{ modo: "login" }}
-              className="flex min-h-13 items-center justify-center rounded-xl border border-[#e4bd68]/65 bg-[#061426]/35 px-5 text-sm font-semibold text-[#f7f2e7] backdrop-blur-sm transition hover:border-[#e4bd68] hover:bg-[#e4bd68]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5d991]"
-            >
-              Iniciar sesión
-            </Link>
+            {session ? (
+              <Link
+                to="/dashboard"
+                className="flex min-h-13 items-center justify-center rounded-xl bg-[linear-gradient(180deg,#e4bd68,#b98227)] px-5 text-sm font-semibold text-[#061426] shadow-[0_8px_24px_rgba(0,0,0,.25)] transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5d991]"
+              >
+                Comenzar mi consagración
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  search={{ modo: "registro" }}
+                  className="flex min-h-13 items-center justify-center rounded-xl bg-[linear-gradient(180deg,#e4bd68,#b98227)] px-5 text-sm font-semibold text-[#061426] shadow-[0_8px_24px_rgba(0,0,0,.25)] transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5d991]"
+                >
+                  Comenzar mi consagración
+                </Link>
+                <Link
+                  to="/auth"
+                  search={{ modo: "login" }}
+                  className="flex min-h-13 items-center justify-center rounded-xl border border-[#e4bd68]/65 bg-[#061426]/35 px-5 text-sm font-semibold text-[#f7f2e7] backdrop-blur-sm transition hover:border-[#e4bd68] hover:bg-[#e4bd68]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5d991]"
+                >
+                  Iniciar sesión
+                </Link>
+              </>
+            )}
             <Link
               to="/conocer"
               className="mx-auto flex min-h-11 items-center gap-2 px-3 text-sm text-[#f7f2e7]/80 transition hover:text-[#e4bd68] focus-visible:rounded focus-visible:outline-2 focus-visible:outline-[#f5d991]"
